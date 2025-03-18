@@ -20,6 +20,13 @@
       font-weight: bold;
       margin-bottom: 10px;
     }
+    .vn-title a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    .vn-title a:hover {
+      text-decoration: underline;
+    }
     .vn-description {
       font-size: 16px;
       color: #555;
@@ -95,9 +102,13 @@
         const vnContainer = document.createElement('div');
         vnContainer.className = 'vn-container';
 
+        // Make the title clickable
         const title = document.createElement('div');
         title.className = 'vn-title';
-        title.textContent = vn.title;
+        const titleLink = document.createElement('a');
+        titleLink.href = `${baseUrl}${vn.link}.json`; // Link to the JSON file
+        titleLink.textContent = vn.title;
+        title.appendChild(titleLink);
         vnContainer.appendChild(title);
 
         const description = document.createElement('div');
