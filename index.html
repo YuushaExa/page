@@ -23,6 +23,7 @@
     .vn-title a {
       text-decoration: none;
       color: #007bff;
+      cursor: pointer;
     }
     .vn-title a:hover {
       text-decoration: underline;
@@ -68,12 +69,19 @@
       font-weight: bold;
       color: #000;
     }
+    .details-container {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
   <h1>Visual Novels</h1>
   <div id="vn-list"></div>
   <div id="pagination" class="pagination"></div>
+  <div id="details-container" class="details-container"></div>
 
   <script>
     const baseUrl = 'https://yuushaexa.github.io';
@@ -106,8 +114,8 @@
         const title = document.createElement('div');
         title.className = 'vn-title';
         const titleLink = document.createElement('a');
-        titleLink.href = `${baseUrl}${vn.link}.json`; // Link to the JSON file
         titleLink.textContent = vn.title;
+        titleLink.addEventListener('click', () => fetchAndRenderDetails(`${baseUrl}${vn.link}.json`));
         title.appendChild(titleLink);
         vnContainer.appendChild(title);
 
@@ -168,6 +176,91 @@
 
         vnList.appendChild(vnContainer);
       });
+    }
+
+    // Function to fetch and render details for a specific visual novel
+    async function fetchAndRenderDetails(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const vnDetails = await response.json();
+        renderDetails(vnDetails);
+      } catch (error) {
+        console.error('Error fetching visual novel details:', error);
+      }
+    }
+
+    // Function to render details for a specific visual novel
+    function renderDetails(vn) {
+      const detailsContainer = document.getElementById('details-container');
+      detailsContainer.innerHTML = ''; // Clear existing content
+
+      const details = document.createElement('div');
+      details.className = 'vn-container';
+
+      const title = document.createElement('div');
+      title.className = 'vn-title';
+      title.textContent = vn.title;
+      details.appendChild(title);
+
+      const description = document.createElement('div');
+      description.className = 'vn-description';
+      description.textContent = vn.description;
+      details.appendChild(description);
+
+      if (vn.image && vn.image.url) {
+        const image = document.createElement('img');
+        image.className = 'vn-image';
+        image.src = vn.image.url;
+        image.alt = vn.title;
+        details.appendChild(image);
+      }
+
+      if (vn.developers && vn.developers.length > 0) {
+        const developers = document.createElement('div');
+        developers.className = 'vn-developers';
+        const devList = document.createElement('ul');
+        vn.developers.forEach(dev => {
+          const devItem = document.createElement('li');
+          devItem.textContent = dev.name;
+          devList.appendChild(devItem);
+        });
+        developers.appendChild(devList);
+        details.appendChild(developers);
+      }
+
+      if (vn.tags && vn.tags.length > 0) {
+        const tags = document.createElement('div');
+        tags.className = 'vn-tags';
+        const tagList = document.createElement('ul');
+        vn.tags.forEach(tag => {
+          const tagItem = document.createElement('li');
+          tagItem.textContent = tag;
+          tagList.appendChild(tagItem);
+        });
+        tags.appendChild(tagList);
+        details.appendChild(tags);
+      }
+
+      if (vn.screenshots && vn.screenshots.length > 0) {
+        const screenshots = document.createElement('div');
+        screenshots.className = 'vn-screenshots';
+        const screenshotList = document.createElement('ul');
+        vn.screenshots.forEach(screenshot => {
+          const screenshotItem = document.createElement('li');
+          const screenshotImg = document.createElement('img');
+          screenshotImg.src = screenshot.url;
+          screenshotImg.alt = 'Screenshot';
+          screenshotItem.appendChild(screenshotImg);
+          screenshotList.appendChild(screenshotItem);
+        });
+        screenshots.appendChild(screenshotList);
+        details.appendChild(screenshots);
+      }
+
+      detailsContainer.appendChild(details);
     }
 
     // Function to render pagination
