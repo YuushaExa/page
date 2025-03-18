@@ -72,8 +72,9 @@
     const baseUrl = 'https://yuushaexa.github.io/vn.json';
 
     // Function to fetch and display visual novels
-    async function fetchVisualNovels(url) {
+    async function fetchVisualNovels(page = 1) {
       try {
+        const url = `${baseUrl}?page=${page}`; // Append page number as a query parameter
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -170,7 +171,7 @@
         prevLink.textContent = 'Previous';
         prevLink.addEventListener('click', (e) => {
           e.preventDefault();
-          fetchVisualNovels(`${baseUrl}?page=${pagination.currentPage - 1}`);
+          fetchVisualNovels(pagination.currentPage - 1); // Fetch previous page
         });
         paginationContainer.appendChild(prevLink);
       }
@@ -185,7 +186,7 @@
         nextLink.textContent = 'Next';
         nextLink.addEventListener('click', (e) => {
           e.preventDefault();
-          fetchVisualNovels(`${baseUrl}?page=${pagination.currentPage + 1}`);
+          fetchVisualNovels(pagination.currentPage + 1); // Fetch next page
         });
         paginationContainer.appendChild(nextLink);
       }
@@ -193,7 +194,7 @@
 
     // Fetch and display visual novels when the page loads
     document.addEventListener('DOMContentLoaded', () => {
-      fetchVisualNovels(baseUrl);
+      fetchVisualNovels(1); // Fetch the first page by default
     });
   </script>
 </body>
