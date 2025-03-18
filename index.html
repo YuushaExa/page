@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Novels</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .vn-container {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    .vn-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .vn-description {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .vn-image {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    .vn-developers, .vn-tags, .vn-screenshots {
+      margin-bottom: 10px;
+    }
+    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .vn-developers li, .vn-tags li {
+      display: inline-block;
+      margin-right: 10px;
+      background-color: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 3px;
+    }
+    .vn-screenshots img {
+      max-width: 100px;
+      margin-right: 10px;
+    }
+    .pagination {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .pagination a {
+      margin: 0 5px;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .pagination a.active {
+      font-weight: bold;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Visual Novels</h1>
+  <div id="vn-list"></div>
+  <div id="pagination" class="pagination"></div>
+
+  <script>
+    // Function to fetch and display visual novels
+    async function fetchVisualNovels(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        renderVisualNovels(data.posts);
+        renderPagination(data.pagination);
+      } catch (error) {
+        console.error('Error fetching visual novels:', error);
+      }
+    }
+
+    // Function to render visual novels
+    function renderVisualNovels(posts) {
+      const vnList = document.getElementById('vn-list');
+      vnList.innerHTML = ''; // Clear existing content
+
+      posts.forEach(vn => {
+        const vnContainer = document.createElement('div');
+        vnContainer.className = 'vn-container';
+
+        const title = document.createElement('div');
+        title.className = 'vn-title';
+        title.textContent = vn.title;
+        vnContainer.appendChild(title);
+
+        const description = document.createElement('div');
+        description.className = 'vn-description';
+        description.textContent = vn.description;
+        vnContainer.appendChild(description);
+
+        if (vn.image && vn.image.url) {
+          const image = document.createElement('img');
+          image.className = 'vn-image';
+          image.src = vn.image.url;
+          image.alt = vn.title;
+          vnContainer.appendChild(image);
+        }
+
+        if (vn.developers && vn.developers.length > 0) {
+          const developers = document.createElement('div');
+          developers.className = 'vn-developers';
+          const devList = document.createElement('ul');
+          vn.developers.forEach(dev => {
+            const devItem = document.createElement('li');
+            devItem.textContent = dev.name;
+            devList.appendChild(devItem);
+          });
+          developers.appendChild(devList);
+          vnContainer.appendChild(developers);
+        }
+
+        if (vn.tags && vn.tags.length > 0) {
+          const tags = document.createElement('div');
+          tags.className = 'vn-tags';
+          const tagList = document.createElement('ul');
+          vn.tags.forEach(tag => {
+            const tagItem = document.createElement('li');
+            tagItem.textContent = tag;
+            tagList.appendChild(tagItem);
+          });
+          tags.appendChild(tagList);
+          vnContainer.appendChild(tags);
+        }
+
+        if (vn.screenshots && vn.screenshots.length > 0) {
+          const screenshots = document.createElement('div');
+          screenshots.className = 'vn-screenshots';
+          const screenshotList = document.createElement('ul');
+          vn.screenshots.forEach(screenshot => {
+            const screenshotItem = document.createElement('li');
+            const screenshotImg = document.createElement('img');
+            screenshotImg.src = screenshot.url;
+            screenshotImg.alt = 'Screenshot';
+            screenshotItem.appendChild(screenshotImg);
+            screenshotList.appendChild(screenshotItem);
+          });
+          screenshots.appendChild(screenshotList);
+          vnContainer.appendChild(screenshots);
+        }
+
+        vnList.appendChild(vnContainer);
+      });
+    }
+
+    // Function to render pagination
+    function renderPagination(pagination) {
+      const paginationContainer = document.getElementById('pagination');
+      paginationContainer.innerHTML = ''; // Clear existing content
+
+      if (pagination.previousPage) {
+        const prevLink = document.createElement('a');
+        prevLink.href = `#${pagination.previousPage}`;
+        prevLink.textContent = 'Previous';
+        prevLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          fetchVisualNovels(pagination.previousPage);
+        });
+        paginationContainer.appendChild(prevLink);
+      }
+
+      const currentPage = document.createElement('span');
+      currentPage.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
+      paginationContainer.appendChild(currentPage);
+
+      if (pagination.nextPage) {
+        const nextLink = document.createElement('a');
+        nextLink.href = `#${pagination.nextPage}`;
+        nextLink.textContent = 'Next';
+        nextLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          fetchVisualNovels(pagination.nextPage);
+        });
+        paginationContainer.appendChild(nextLink);
+      }
+    }
+
+    // Fetch and display visual novels when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      const initialUrl = 'https://yuushaexa.github.io/vn.json'; // Replace with your initial JSON API endpoint
+      fetchVisualNovels(initialUrl);
+    });
+  </script>
+</body>
+</html>
