@@ -69,6 +69,8 @@
   <div id="pagination" class="pagination"></div>
 
   <script>
+    const baseUrl = 'https://yuushaexa.github.io/vn.json';
+
     // Function to fetch and display visual novels
     async function fetchVisualNovels(url) {
       try {
@@ -168,7 +170,7 @@
         prevLink.textContent = 'Previous';
         prevLink.addEventListener('click', (e) => {
           e.preventDefault();
-          fetchVisualNovels(pagination.previousPage);
+          fetchVisualNovels(`${baseUrl}?page=${pagination.currentPage - 1}`);
         });
         paginationContainer.appendChild(prevLink);
       }
@@ -183,7 +185,7 @@
         nextLink.textContent = 'Next';
         nextLink.addEventListener('click', (e) => {
           e.preventDefault();
-          fetchVisualNovels(pagination.nextPage);
+          fetchVisualNovels(`${baseUrl}?page=${pagination.currentPage + 1}`);
         });
         paginationContainer.appendChild(nextLink);
       }
@@ -191,8 +193,7 @@
 
     // Fetch and display visual novels when the page loads
     document.addEventListener('DOMContentLoaded', () => {
-      const initialUrl = 'https://yuushaexa.github.io/vn.json'; // Replace with your initial JSON API endpoint
-      fetchVisualNovels(initialUrl);
+      fetchVisualNovels(baseUrl);
     });
   </script>
 </body>
