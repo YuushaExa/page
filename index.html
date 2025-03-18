@@ -106,6 +106,10 @@
     // Function to render visual novels
     function renderVisualNovels(posts) {
       const vnList = document.getElementById('vn-list');
+      if (!vnList) {
+        console.error('Element with id "vn-list" not found.');
+        return;
+      }
       vnList.innerHTML = ''; // Clear existing content
 
       posts.forEach(vn => {
@@ -197,6 +201,10 @@
     // Function to render details for a specific visual novel
     function renderDetails(vn) {
       const app = document.getElementById('app');
+      if (!app) {
+        console.error('Element with id "app" not found.');
+        return;
+      }
       app.innerHTML = ''; // Clear existing content
 
       // Add a back button
@@ -278,6 +286,10 @@
     // Function to render pagination
     function renderPagination(pagination) {
       const paginationContainer = document.getElementById('pagination');
+      if (!paginationContainer) {
+        console.error('Element with id "pagination" not found.');
+        return;
+      }
       paginationContainer.innerHTML = ''; // Clear existing content
 
       if (pagination.previousPage) {
