@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visual Novels</title>
+  <title>Basic SPA</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -69,27 +69,26 @@
       font-weight: bold;
       color: #000;
     }
-    .back-button {
-      margin-bottom: 20px;
+    .details-container {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <!-- Initial content (list of visual novels) -->
-    <h1>Visual Novels</h1>
-    <div id="vn-list"></div>
-    <div id="pagination" class="pagination"></div>
-  </div>
+  <h1>Visual Novels</h1>
+  <div id="vn-list"></div>
+  <div id="pagination" class="pagination"></div>
+  <div id="details-container" class="details-container"></div>
 
   <script>
     const baseUrl = 'https://yuushaexa.github.io';
-    let currentPage = 1;
 
     // Function to fetch and display visual novels
-    async function fetchVisualNovels(page = 1) {
+    async function fetchVisualNovels(url) {
       try {
-        const url = `${baseUrl}/vn.json?page=${page}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -97,7 +96,6 @@
         const data = await response.json();
         renderVisualNovels(data.posts);
         renderPagination(data.pagination);
-        currentPage = page; // Update the current page
       } catch (error) {
         console.error('Error fetching visual novels:', error);
       }
@@ -106,10 +104,6 @@
     // Function to render visual novels
     function renderVisualNovels(posts) {
       const vnList = document.getElementById('vn-list');
-      if (!vnList) {
-        console.error('Element with id "vn-list" not found.');
-        return;
-      }
       vnList.innerHTML = ''; // Clear existing content
 
       posts.forEach(vn => {
@@ -200,23 +194,9 @@
 
     // Function to render details for a specific visual novel
     function renderDetails(vn) {
-      const app = document.getElementById('app');
-      if (!app) {
-        console.error('Element with id "app" not found.');
-        return;
-      }
-      app.innerHTML = ''; // Clear existing content
+      const detailsContainer = document.getElementById('details-container');
+      detailsContainer.innerHTML = ''; // Clear existing content
 
-      // Add a back button
-      const backButton = document.createElement('button');
-      backButton.textContent = 'Back to List';
-      backButton.className = 'back-button';
-      backButton.addEventListener('click', () => {
-        fetchVisualNovels(currentPage); // Return to the previous page
-      });
-      app.appendChild(backButton);
-
-      // Render the details
       const details = document.createElement('div');
       details.className = 'vn-container';
 
@@ -280,16 +260,12 @@
         details.appendChild(screenshots);
       }
 
-      app.appendChild(details);
+      detailsContainer.appendChild(details);
     }
 
     // Function to render pagination
     function renderPagination(pagination) {
       const paginationContainer = document.getElementById('pagination');
-      if (!paginationContainer) {
-        console.error('Element with id "pagination" not found.');
-        return;
-      }
       paginationContainer.innerHTML = ''; // Clear existing content
 
       if (pagination.previousPage) {
@@ -298,14 +274,14 @@
         prevLink.textContent = 'Previous';
         prevLink.addEventListener('click', (e) => {
           e.preventDefault();
-          fetchVisualNovels(pagination.currentPage - 1);
+          fetchVisualNovels(`${baseUrl}/${pagination.previousPage}`);
         });
         paginationContainer.appendChild(prevLink);
       }
 
-      const currentPageSpan = document.createElement('span');
-      currentPageSpan.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
-      paginationContainer.appendChild(currentPageSpan);
+      const currentPage = document.createElement('span');
+      currentPage.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
+      paginationContainer.appendChild(currentPage);
 
       if (pagination.nextPage) {
         const nextLink = document.createElement('a');
@@ -313,7 +289,7 @@
         nextLink.textContent = 'Next';
         nextLink.addEventListener('click', (e) => {
           e.preventDefault();
-          fetchVisualNovels(pagination.currentPage + 1);
+          fetchVisualNovels(`${baseUrl}/${pagination.nextPage}`);
         });
         paginationContainer.appendChild(nextLink);
       }
@@ -321,7 +297,7 @@
 
     // Fetch and display visual novels when the page loads
     document.addEventListener('DOMContentLoaded', () => {
-      fetchVisualNovels(1); // Fetch the first page by default
+      fetchVisualNovels(`${baseUrl}/vn.json`); // Fetch the initial data
     });
   </script>
 </body>
