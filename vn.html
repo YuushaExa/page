@@ -50,82 +50,18 @@
       font-weight: bold;
       color: #000;
     }
-    .vn-developers, .vn-tags, .vn-screenshots {
-      margin-bottom: 10px;
-    }
-    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    .vn-developers li, .vn-tags li {
-      display: inline-block;
-      margin-right: 10px;
-      background-color: #f0f0f0;
-      padding: 5px 10px;
-      border-radius: 3px;
-    }
-    .vn-screenshots img {
-      max-width: 100px;
-      margin-right: 10px;
-    }
   </style>
 </head>
 <body>
-  <h1 id="page-title">Visual Novels</h1>
-  <div id="content">
-    <!-- Index Page Content -->
-    <div id="index-page">
-      <div id="vn-list"></div>
-      <div id="pagination" class="pagination"></div>
-    </div>
-
-    <!-- Post Page Content -->
-    <div id="post-page" style="display: none;">
-      <div id="vn-details" class="vn-container"></div>
-      <a href="#" id="back-to-index">Back to List</a>
-    </div>
-  </div>
-
-  <!-- Templates -->
-  <template id="vn-template">
-    <div class="vn-container">
-      <div class="vn-title">
-        <a href="#" class="vn-link">{{title}}</a>
-      </div>
-      <div class="vn-description">{{description}}</div>
-      {{#image}}<img class="vn-image" src="{{url}}" alt="{{title}}">{{/image}}
-    </div>
-  </template>
-
-  <template id="details-template">
-    <div class="vn-container">
-      <div class="vn-title">{{title}}</div>
-      <div class="vn-description">{{description}}</div>
-      {{#image}}<img class="vn-image" src="{{url}}" alt="{{title}}">{{/image}}
-      {{#developers.length}}
-        <div class="vn-developers">
-          <ul>{{#developers}}<li>{{name}}</li>{{/developers}}</ul>
-        </div>
-      {{/developers.length}}
-      {{#tags.length}}
-        <div class="vn-tags">
-          <ul>{{#tags}}<li>{{.}}</li>{{/tags}}</ul>
-        </div>
-      {{/tags.length}}
-      {{#screenshots.length}}
-        <div class="vn-screenshots">
-          <ul>{{#screenshots}}<li><img src="{{url}}" alt="Screenshot"></li>{{/screenshots}}</ul>
-        </div>
-      {{/screenshots.length}}
-    </div>
-  </template>
+  <h1>Visual Novels</h1>
+  <div id="vn-list"></div>
+  <div id="pagination" class="pagination"></div>
 
   <script>
     const baseUrl = 'https://yuushaexa.github.io';
 
-    // Render visual novels list
-    async function renderIndex() {
-      const url = `${baseUrl}/vn.json`;
+    // Fetch and display visual novels
+    async function fetchVisualNovels(url) {
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error('Network response was not ok');
@@ -140,113 +76,31 @@
     // Render visual novels into the template
     function renderVisualNovels(posts) {
       const vnList = document.getElementById('vn-list');
-      const template = document.getElementById('vn-template').innerHTML;
-      vnList.innerHTML = posts.map(vn => {
-        return template
-          .replace(/{{title}}/g, vn.title)
-          .replace(/{{description}}/g, vn.description)
-          .replace(/{{#image}}(.+?){{\/image}}/g, (match, content) => vn.image?.url ? content.replace(/{{url}}/g, vn.image.url) : '');
-      }).join('');
-      addEventListenersToLinks();
+      vnList.innerHTML = posts.map(vn => `
+        <div class="vn-container">
+          <div class="vn-title">
+            <a href="post.html?vn=${vn.link}">${vn.title}</a>
+          </div>
+          <div class="vn-description">${vn.description}</div>
+          ${vn.image?.url ? `<img class="vn-image" src="${vn.image.url}" alt="${vn.title}">` : ''}
+        </div>
+      `).join('');
     }
 
     // Render pagination
     function renderPagination(pagination) {
       const paginationContainer = document.getElementById('pagination');
       paginationContainer.innerHTML = `
-        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
+        ${pagination.previousPage ? `<a href="#" onclick="fetchVisualNovels('${baseUrl}/${pagination.previousPage}')">Previous</a>` : ''}
         <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
+        ${pagination.nextPage ? `<a href="#" onclick="fetchVisualNovels('${baseUrl}/${pagination.nextPage}')">Next</a>` : ''}
       `;
-      addEventListenersToPagination();
     }
 
-    // Render post details
-   async function renderPost(vnLink) {
-  const url = `${baseUrl}${vnLink}.json`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const vnDetails = await response.json();
-    const template = document.getElementById('details-template').innerHTML;
-    const detailsContainer = document.getElementById('vn-details');
-
-    const filledTemplate = template
-      .replace(/{{title}}/g, vnDetails.title)
-      .replace(/{{description}}/g, vnDetails.description)
-      .replace(/{{#image}}(.+?){{\/image}}/g, (match, content) => 
-        vnDetails.image?.url ? content.replace(/{{url}}/g, vnDetails.image.url) : ''
-      )
-      .replace(/{{#developers.length}}(.+?){{\/developers.length}}/g, (match, content) => 
-        vnDetails.developers?.length ? 
-          content.replace(/{{#developers}}(.+?){{\/developers}}/g, (match, innerContent) => 
-            vnDetails.developers.map(dev => innerContent.replace(/{{name}}/g, dev.name)).join('') 
-          : ''
-      )
-      .replace(/{{#tags.length}}(.+?){{\/tags.length}}/g, (match, content) => 
-        vnDetails.tags?.length ? 
-          content.replace(/{{#tags}}(.+?){{\/tags}}/g, (match, innerContent) => 
-            vnDetails.tags.map(tag => innerContent.replace(/{{.}}/g, tag)).join('') 
-          : ''
-      )
-      .replace(/{{#screenshots.length}}(.+?){{\/screenshots.length}}/g, (match, content) => 
-        vnDetails.screenshots?.length ? 
-          content.replace(/{{#screenshots}}(.+?){{\/screenshots}}/g, (match, innerContent) => 
-            vnDetails.screenshots.map(screenshot => innerContent.replace(/{{url}}/g, screenshot.url)).join('') 
-          : ''
-      );
-
-    detailsContainer.innerHTML = filledTemplate;
-    showPostPage();
-  } catch (error) {
-    console.error('Error fetching visual novel details:', error);
-  }
-}
-
-    // Show index page
-    function showIndexPage() {
-      document.getElementById('index-page').style.display = 'block';
-      document.getElementById('post-page').style.display = 'none';
-      document.getElementById('page-title').textContent = 'Visual Novels';
-    }
-
-    // Show post page
-    function showPostPage() {
-      document.getElementById('index-page').style.display = 'none';
-      document.getElementById('post-page').style.display = 'block';
-      document.getElementById('page-title').textContent = 'Visual Novel Details';
-    }
-
-    // Add event listeners to visual novel links
-    function addEventListenersToLinks() {
-      document.querySelectorAll('.vn-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const vnLink = e.target.closest('a').textContent.toLowerCase().replace(/\s+/g, '-');
-          renderPost(vnLink);
-        });
-      });
-    }
-
-    // Add event listeners to pagination links
-    function addEventListenersToPagination() {
-      document.querySelectorAll('#pagination a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const page = e.target.getAttribute('data-page');
-          renderIndex(`${baseUrl}/${page}`);
-        });
-      });
-    }
-
-    // Back to index page
-    document.getElementById('back-to-index').addEventListener('click', (e) => {
-      e.preventDefault();
-      showIndexPage();
+    // Fetch initial data on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchVisualNovels(`${baseUrl}/vn.json`);
     });
-
-    // Initial render
-    document.addEventListener('DOMContentLoaded', renderIndex);
   </script>
 </body>
 </html>
