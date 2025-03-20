@@ -162,26 +162,46 @@
     }
 
     // Render post details
-    async function renderPost(vnLink) {
-      const url = `${baseUrl}${vnLink}.json`;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const vnDetails = await response.json();
-        const template = document.getElementById('details-template').innerHTML;
-        const detailsContainer = document.getElementById('vn-details');
-        detailsContainer.innerHTML = template
-          .replace(/{{title}}/g, vnDetails.title)
-          .replace(/{{description}}/g, vnDetails.description)
-          .replace(/{{#image}}(.+?){{\/image}}/g, (match, content) => vnDetails.image?.url ? content.replace(/{{url}}/g, vnDetails.image.url) : '')
-          .replace(/{{#developers.length}}(.+?){{\/developers.length}}/g, (match, content) => vnDetails.developers?.length ? content.replace(/{{#developers}}(.+?){{\/developers}}/g, (match, innerContent) => vnDetails.developers.map(dev => innerContent.replace(/{{name}}/g, dev.name).join('')) : '')
-          .replace(/{{#tags.length}}(.+?){{\/tags.length}}/g, (match, content) => vnDetails.tags?.length ? content.replace(/{{#tags}}(.+?){{\/tags}}/g, (match, innerContent) => vnDetails.tags.map(tag => innerContent.replace(/{{.}}/g, tag)).join('') : '')
-          .replace(/{{#screenshots.length}}(.+?){{\/screenshots.length}}/g, (match, content) => vnDetails.screenshots?.length ? content.replace(/{{#screenshots}}(.+?){{\/screenshots}}/g, (match, innerContent) => vnDetails.screenshots.map(screenshot => innerContent.replace(/{{url}}/g, screenshot.url)).join('')) : '');
-        showPostPage();
-      } catch (error) {
-        console.error('Error fetching visual novel details:', error);
-      }
-    }
+   async function renderPost(vnLink) {
+  const url = `${baseUrl}${vnLink}.json`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const vnDetails = await response.json();
+    const template = document.getElementById('details-template').innerHTML;
+    const detailsContainer = document.getElementById('vn-details');
+
+    const filledTemplate = template
+      .replace(/{{title}}/g, vnDetails.title)
+      .replace(/{{description}}/g, vnDetails.description)
+      .replace(/{{#image}}(.+?){{\/image}}/g, (match, content) => 
+        vnDetails.image?.url ? content.replace(/{{url}}/g, vnDetails.image.url) : ''
+      )
+      .replace(/{{#developers.length}}(.+?){{\/developers.length}}/g, (match, content) => 
+        vnDetails.developers?.length ? 
+          content.replace(/{{#developers}}(.+?){{\/developers}}/g, (match, innerContent) => 
+            vnDetails.developers.map(dev => innerContent.replace(/{{name}}/g, dev.name)).join('') 
+          : ''
+      )
+      .replace(/{{#tags.length}}(.+?){{\/tags.length}}/g, (match, content) => 
+        vnDetails.tags?.length ? 
+          content.replace(/{{#tags}}(.+?){{\/tags}}/g, (match, innerContent) => 
+            vnDetails.tags.map(tag => innerContent.replace(/{{.}}/g, tag)).join('') 
+          : ''
+      )
+      .replace(/{{#screenshots.length}}(.+?){{\/screenshots.length}}/g, (match, content) => 
+        vnDetails.screenshots?.length ? 
+          content.replace(/{{#screenshots}}(.+?){{\/screenshots}}/g, (match, innerContent) => 
+            vnDetails.screenshots.map(screenshot => innerContent.replace(/{{url}}/g, screenshot.url)).join('') 
+          : ''
+      );
+
+    detailsContainer.innerHTML = filledTemplate;
+    showPostPage();
+  } catch (error) {
+    console.error('Error fetching visual novel details:', error);
+  }
+}
 
     // Show index page
     function showIndexPage() {
