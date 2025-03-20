@@ -133,9 +133,9 @@
     function renderPagination(pagination) {
       const paginationContainer = document.getElementById('pagination');
       paginationContainer.innerHTML = `
-        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
-        <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
+        ${previousPage ? `<a href="#" data-page="${previousPage}">Previous</a>` : ''}
+        <span>Page ${currentPage} of ${totalPages}</span>
+        ${nextPage ? `<a href="#" data-page="${nextPage}">Next</a>` : ''}
       `;
 
       // Add event listeners to pagination links
