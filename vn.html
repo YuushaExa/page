@@ -151,7 +151,7 @@
     // Fetch and render details for a specific visual novel
     async function fetchAndRenderDetails(vnLink) {
       try {
-        const response = await fetch(`${baseUrl}${vnLink}.json`);
+        const response = await fetch(`${baseUrl}${vnLink}`);
         if (!response.ok) throw new Error('Network response was not ok');
         const vnDetails = await response.json();
         renderDetails(vnDetails);
