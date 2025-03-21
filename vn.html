@@ -167,45 +167,45 @@
     }
 
     // Render details into the template
-    function renderDetails(vn) {
-      const detailsContainer = document.getElementById('vn-details');
-      detailsContainer.innerHTML = `
-        <div class="vn-title">${vn.title}</div>
-        <div class="vn-description">${vn.description}</div>
-        ${vn.image?.url ? `<img class="vn-image" src="${vn.image.url}" alt="${vn.title}">` : ''}
-        ${vn.developers?.length ? `
-          <div class="vn-developers">
-            <strong>Developers:</strong>
-            <ul>${vn.developers.map(dev => `
-              <li>
-                <a href="#" data-developer-link="${dev.link}">${dev.name}</a>
-              </li>
-            `).join('')}</ul>
-          </div>
-        ` : ''}
-        ${vn.tags?.length ? `
-          <div class="vn-tags">
-            <strong>Tags:</strong>
-            <ul>${vn.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
-          </div>
-        ` : ''}
-        ${vn.screenshots?.length ? `
-          <div class="vn-screenshots">
-            <strong>Screenshots:</strong>
-            <ul>${vn.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
-          </div>
-        ` : ''}
-      `;
+function renderDetails(vn) {
+  const detailsContainer = document.getElementById('vn-details');
+  detailsContainer.innerHTML = `
+    <div class="vn-title">${vn.title}</div>
+    <div class="vn-description">${vn.description}</div>
+    ${vn.image?.url ? `<img class="vn-image" src="${vn.image.url}" alt="${vn.title}">` : ''}
+    ${vn.developers?.length ? `
+      <div class="vn-developers">
+        <strong>Developers:</strong>
+        <ul>${vn.developers.map(dev => `
+          <li>
+            <a href="#" data-developer-link="vn/developers/${dev.id}.json">${dev.name}</a>
+          </li>
+        `).join('')}</ul>
+      </div>
+    ` : ''}
+    ${vn.tags?.length ? `
+      <div class="vn-tags">
+        <strong>Tags:</strong>
+        <ul>${vn.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
+      </div>
+    ` : ''}
+    ${vn.screenshots?.length ? `
+      <div class="vn-screenshots">
+        <strong>Screenshots:</strong>
+        <ul>${vn.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
+      </div>
+    ` : ''}
+  `;
 
-      // Add event listeners to developer links
-      document.querySelectorAll('.vn-developers a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const developerLink = e.target.getAttribute('data-developer-link');
-          fetchAndRenderDeveloperDetails(developerLink);
-        });
-      });
-    }
+  // Add event listeners to developer links
+  document.querySelectorAll('.vn-developers a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const developerLink = link.getAttribute('data-developer-link');
+      fetchAndRenderDeveloperDetails(developerLink);
+    });
+  });
+}
 
     // Fetch and render details for a specific developer
     async function fetchAndRenderDeveloperDetails(developerLink) {
