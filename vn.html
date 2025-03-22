@@ -288,10 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = e.target.value.trim().toLowerCase(); // Get the search query
     searchResults.innerHTML = ''; // Clear previous results
 
-    if (query.length >= 3) {
+    if (query.length >= 2) {
       try {
         // Extract the first two letters as the prefix
-        const prefix = query.slice(0, 3);
+        const prefix = query.slice(0, 2);
         const filePath = `${baseUrl}vn/posts/search-index/${prefix}.json`;
 
         // Fetch the JSON file for the prefix
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error fetching search index:', error);
         searchResults.textContent = 'No results found.';
       }
-    } else if (query.length > 0 && query.length < 3) {
+    } else if (query.length > 0 && query.length < 2) {
       // Inform the user to type at least 3 characters
       searchResults.textContent = 'Please type at least 3 characters to search.';
     } else {
