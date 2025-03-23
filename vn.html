@@ -208,8 +208,14 @@ function renderDetails(vn) {
     ` : ''}
   `;
 
-  // Update Open Graph meta tags dynamically
-  updateOpenGraphMetaTags(vn);
+  // Attach event listeners to developer links AFTER rendering
+  document.querySelectorAll('.vn-developers a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const developerLink = link.getAttribute('data-developer-link');
+      fetchAndRenderDeveloperDetails(developerLink);
+    });
+  });
 }
 
 function updateOpenGraphMetaTags(vn) {
