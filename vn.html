@@ -208,6 +208,8 @@ function renderDetails(vn) {
     ` : ''}
   `;
 
+   updateOpenGraphMetaTags(vn);
+
   // Attach event listeners to developer links AFTER rendering
   document.querySelectorAll('.vn-developers a').forEach(link => {
     link.addEventListener('click', (e) => {
