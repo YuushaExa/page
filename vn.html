@@ -284,13 +284,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchBar = document.getElementById('search-bar');
   const searchResults = document.getElementById('search-results');
 
-  searchBar.addEventListener('input', async (e) => {
-    const query = e.target.value.trim().toLowerCase(); // Get the search query
+  // Debounce function to limit the frequency of search requests
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+  };
+
+  const handleSearch = async (query) => {
     searchResults.innerHTML = ''; // Clear previous results
 
     if (query.length >= 3) {
       try {
-        // Extract the first two letters as the prefix
+        // Extract the first three letters as the prefix
         const prefix = query.slice(0, 3);
         const filePath = `${baseUrl}vn/posts/search-index/${prefix}.json`;
 
@@ -299,17 +307,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
         const searchData = await response.json();
 
-        // Filter results based on the full query
-        const matchedWords = Object.keys(searchData).filter(word =>
-          word.toLowerCase().startsWith(query)
+        // Tokenize the query into individual words
+        const tokens = query.toLowerCase().split(/\s+/);
+
+        // Find matching words for each token
+        const matchedWords = tokens.map(token =>
+          Object.keys(searchData).filter(word => word.toLowerCase().startsWith(token))
         );
 
-        if (matchedWords.length > 0) {
+        // Find intersection of document IDs for all tokens
+        const resultIds = matchedWords.reduce((acc, curr) => {
+          if (acc.length === 0) return curr.flatMap(word => searchData[word]);
+          return acc.filter(id => curr.some(word => searchData[word].includes(id)));
+        }, []);
+
+        if (resultIds.length > 0) {
           // Display matching IDs
-          matchedWords.forEach(word => {
-            const ids = searchData[word];
+          resultIds.forEach(id => {
             const resultItem = document.createElement('div');
-            resultItem.textContent = `Word: "${word}" - IDs: ${ids.join(', ')}`;
+            resultItem.textContent = `ID: ${id}`;
             searchResults.appendChild(resultItem);
           });
         } else {
@@ -327,7 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // Clear results when the input is empty
       searchResults.textContent = '';
     }
-  });
+  };
+
+  // Add debounced event listener
+  searchBar.addEventListener('input', debounce((e) => {
+    const query = e.target.value.trim().toLowerCase(); // Get the search query
+    handleSearch(query);
+  }, 300)); // 300ms debounce delay
 });
   </script>
 </body>
