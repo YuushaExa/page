@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
+    <meta property="og:title" content="Visual Novels">
+  <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
+  <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -84,19 +87,25 @@
     }
   </style>
 </head>
-<body>
+  <header>
   <h1 id="page-title">Visual Novels</h1>
-  <div id="index-container">
   <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
-  <div id="search-results" style="margin-top: 10px;"></div>
+</header>
+<body>
+<main>
+  <section id="index-container">
+    <div id="search-results" style="margin-top: 10px;"></div>
     <div id="vn-list"></div>
     <div id="pagination" class="pagination"></div>
-  </div>
-  <div id="details-container" class="vn-container">
-    <div id="vn-details"></div>
+  </section>
+  <section id="details-container" class="vn-container">
+    <article id="vn-details"></article>
     <a href="#" id="back-to-index">Back to List</a>
-  </div>
-
+  </section>
+</main>
+  <footer>
+2025
+  </footer>
   <script>
     const baseUrl = 'https://yuushaexa.github.io/headless/';
 
@@ -199,14 +208,18 @@ function renderDetails(vn) {
     ` : ''}
   `;
 
-  // Add event listeners to developer links
-  document.querySelectorAll('.vn-developers a').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const developerLink = link.getAttribute('data-developer-link');
-      fetchAndRenderDeveloperDetails(developerLink);
-    });
-  });
+  // Update Open Graph meta tags dynamically
+  updateOpenGraphMetaTags(vn);
+}
+
+function updateOpenGraphMetaTags(vn) {
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDescription = document.querySelector('meta[property="og:description"]');
+  const ogImage = document.querySelector('meta[property="og:image"]');
+
+  if (ogTitle) ogTitle.setAttribute('content', vn.title || 'Visual Novels');
+  if (ogDescription) ogDescription.setAttribute('content', vn.description || 'No description available.');
+  if (ogImage && vn.image?.url) ogImage.setAttribute('content', vn.image.url);
 }
 
     // Fetch and render details for a specific developer
@@ -255,11 +268,20 @@ function renderDetails(vn) {
     }
 
     // Show the index page
-    function showIndexPage() {
-      document.getElementById('index-container').style.display = 'block';
-      document.getElementById('details-container').style.display = 'none';
-      document.getElementById('page-title').textContent = 'Visual Novels';
-    }
+function showIndexPage() {
+  document.getElementById('index-container').style.display = 'block';
+  document.getElementById('details-container').style.display = 'none';
+  document.getElementById('page-title').textContent = 'Visual Novels';
+
+  // Reset Open Graph meta tags to default values
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDescription = document.querySelector('meta[property="og:description"]');
+  const ogImage = document.querySelector('meta[property="og:image"]');
+
+  if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
+  if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
+  if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
+}
 
     // Show the details page
     function showDetailsPage() {
