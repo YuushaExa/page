@@ -234,31 +234,12 @@ function updateOpenGraphMetaTags(vn) {
         <div class="vn-title">${developer.name}</div>
         <div class="vn-description">${developer.description || 'No description available.'}</div>
         ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
-        ${developer.posts?.length ? `
-          <div class="vn-posts">
-            <strong>Visual Novels:</strong>
-            <ul>${developer.posts.map(post => `
-              <li>
-                <a href="#" data-vn-link="${post.link}">
-                  ${post.title}
-                  ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
-                </a>
-              </li>
-            `).join('')}</ul>
-          </div>
-        ` : ''}
+    ${developer.posts?.length ? `
+       renderVisualNovels(posts)}
+      ` : ''}
       `;
 
    updateOpenGraphMetaTags(vn);
-      
-      // Add event listeners to visual novel links
-      document.querySelectorAll('.vn-posts a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
-          fetchAndRenderDetails(vnLink);
-        });
-      });
     }
 
     // Show the index page
