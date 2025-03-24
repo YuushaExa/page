@@ -131,7 +131,7 @@
           <div class="vn-title">
             <a href="#" data-vn-link="${post.link}">${post.title}</a>
           </div>
-          <div class="vn-description">${vn.description}</div>
+          <div class="vn-description">${post.description}</div>
           ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         </div>
       `).join('');
@@ -195,16 +195,16 @@ function renderDetails(post) {
         `).join('')}</ul>
       </div>
     ` : ''}
-    ${vn.tags?.length ? `
+    ${post.tags?.length ? `
       <div class="vn-tags">
         <strong>Tags:</strong>
-        <ul>${vn.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
+        <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
       </div>
     ` : ''}
-    ${vn.screenshots?.length ? `
+    ${post.screenshots?.length ? `
       <div class="vn-screenshots">
         <strong>Screenshots:</strong>
-        <ul>${vn.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
+        <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
       </div>
     ` : ''}
   `;
