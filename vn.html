@@ -254,14 +254,15 @@ function renderDeveloperDetails(developer) {
     ${developer.posts?.length ? `
       <div class="vn-posts">
         <strong>Visual Novels:</strong>
-        <ul>${developer.posts.map(post => `
-          <li>
-            <a href="#" data-vn-link="${post.link}">
-              ${post.title}
-              ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
-            </a>
-          </li>
-        `).join('')}</ul>
+        ${developer.posts.map(post => `
+  <div class="vn-container">
+          <div class="vn-title">
+            <a href="#" data-vn-link="${post.link}">${post.title}</a>
+          </div>
+          <div class="vn-description">${post.description}</div>
+          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+        </div>                   
+        `).join('')}
       </div>
     ` : ''}
   `;
