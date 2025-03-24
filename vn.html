@@ -106,9 +106,6 @@
   <footer>
 2025
   </footer>
-    <script src="/page/src/vn/render.js"></script>
-
-  
   <script>
     const baseUrl = 'https://yuushaexa.github.io/headless/';
     const hobby = 'vn';
@@ -127,7 +124,27 @@
     }
 
     // Render visual novels into the template
+    function renderVisualNovels(posts) {
+      const vnList = document.getElementById('vn-list');
+      vnList.innerHTML = posts.map(vn => `
+        <div class="vn-container">
+          <div class="vn-title">
+            <a href="#" data-vn-link="${vn.link}">${vn.title}</a>
+          </div>
+          <div class="vn-description">${vn.description}</div>
+          ${vn.image?.url ? `<img class="vn-image" src="${vn.image.url}" alt="${vn.title}">` : ''}
+        </div>
+      `).join('');
 
+      // Add event listeners to visual novel links
+      document.querySelectorAll('.vn-title a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const vnLink = e.target.getAttribute('data-vn-link');
+          fetchAndRenderDetails(vnLink);
+        });
+      });
+    }
 
     // Render pagination
     function renderPagination(pagination) {
@@ -234,12 +251,32 @@ function updateOpenGraphMetaTags(vn) {
         <div class="vn-title">${developer.name}</div>
         <div class="vn-description">${developer.description || 'No description available.'}</div>
         ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
-    ${developer.posts?.length ? `
-       renderVisualNovels(posts)}
-      ` : ''}
+        ${developer.posts?.length ? `
+          <div class="vn-posts">
+            <strong>Visual Novels:</strong>
+            <ul>${developer.posts.map(post => `
+              <div class="vn-container">
+          <div class="vn-title">
+            <a href="#" data-vn-link="${vn.link}">${vn.title}</a>
+          </div>
+          <div class="vn-description">${vn.description}</div>
+          ${vn.image?.url ? `<img class="vn-image" src="${vn.image.url}" alt="${vn.title}">` : ''}
+        </div>
+            `).join('')}</ul>
+          </div>
+        ` : ''}
       `;
 
    updateOpenGraphMetaTags(vn);
+      
+      // Add event listeners to visual novel links
+      document.querySelectorAll('.vn-posts a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
+          fetchAndRenderDetails(vnLink);
+        });
+      });
     }
 
     // Show the index page
