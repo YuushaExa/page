@@ -124,6 +124,321 @@
     }
 
     // Render visual novels into the template
+  function renderVisualNovels(posts) {
+  const vnList = document.getElementById('vn-list');
+  vnList.innerHTML = posts.map(post => `
+    <div class="vn-container">
+      <div class="vn-title">
+        <a href="#" data-post-link="${post.link}">${post.title}</a>
+      </div>
+      <div class="vn-description">${post.description}</div>
+      ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+    </div>
+  `).join('');
+
+  // Update event listeners to use post-link
+  document.querySelectorAll('.vn-title a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const postLink = e.target.getAttribute('data-post-link');
+      fetchAndRenderDetails(postLink);
+    });
+  });
+}
+
+    // Render pagination
+    function renderPagination(pagination) {
+      const paginationContainer = document.getElementById('pagination');
+      paginationContainer.innerHTML = `
+        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
+        <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
+        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
+      `;
+
+      // Add event listeners to pagination links
+      document.querySelectorAll('#pagination a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = e.target.getAttribute('data-page');
+          fetchVisualNovels(`${baseUrl}/${page}`);
+        });
+      });
+    }
+
+    // Fetch and render details for a specific visual novel
+    async function fetchAndRenderDetails(vnLink) {
+      try {
+        const response = await fetch(`${baseUrl}${vnLink}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const vnDetails = await response.json();
+        renderDetails(vnDetails);
+        showDetailsPage();
+      } catch (error) {
+        console.error('Error fetching visual novel details:', error);
+      }
+    }
+
+    // Render details into the template
+function renderDetails(post) {
+  const detailsContainer = document.getElementById('vn-details');
+  detailsContainer.innerHTML = `
+    <div class="vn-title">${post.title}</div>
+    <div class="vn-description">${post.description}</div>
+    ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+    ${post.developers?.length ? `
+      <div class="vn-developers">
+        <strong>Developers:</strong>
+        <ul>${post.developers.map(dev => `
+          <li>
+            <a href="#" data-developer-link="vn/developers/${dev.id}.json">${dev.name}</a>
+          </li>
+        `).join('')}</ul>
+      </div>
+    ` : ''}
+    ${post.tags?.length ? `
+      <div class="vn-tags">
+        <strong>Tags:</strong>
+        <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
+      </div>
+    ` : ''}
+    ${post.screenshots?.length ? `
+      <div class="vn-screenshots">
+        <strong>Screenshots:</strong>
+        <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
+      </div>
+    ` : ''}
+  `;
+
+  updateOpenGraphMetaTags(post);
+
+  // Attach event listeners to developer links AFTER rendering
+  document.querySelectorAll('.vn-developers a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const developerLink = link.getAttribute('data-developer-link');
+      fetchAndRenderDeveloperDetails(developerLink);
+    });
+  });
+}
+
+function updateOpenGraphMetaTags(post) {
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDescription = document.querySelector('meta[property="og:description"]');
+  const ogImage = document.querySelector('meta[property="og:image"]');
+
+  if (ogTitle) ogTitle.setAttribute('content', post.title || 'Visual Novels');
+  if (ogDescription) ogDescription.setAttribute('content', post.description || 'No description available.');
+  if (ogImage && post.image?.url) ogImage.setAttribute('content', post.image.url);
+}
+    // Fetch and render details for a specific developer
+async function fetchAndRenderDetails(postLink) {
+  try {
+    const response = await fetch(`${baseUrl}${postLink}`);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const postDetails = await response.json();
+    renderDetails(postDetails);
+    showDetailsPage();
+  } catch (error) {
+    console.error('Error fetching visual novel details:', error);
+  }
+}
+
+    // Render developer details into the template
+function renderDeveloperDetails(developer) {
+  const detailsContainer = document.getElementById('vn-details');
+  detailsContainer.innerHTML = `
+    <div class="vn-title">${developer.name}</div>
+    <div class="vn-description">${developer.description || 'No description available.'}</div>
+    ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
+    ${developer.posts?.length ? `
+      <div class="vn-posts">
+        <strong>Visual Novels:</strong>
+        <ul>${developer.posts.map(post => `
+          <li>
+            <a href="#" data-post-link="${post.link}">
+              ${post.title}
+              ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
+            </a>
+          </li>
+        `).join('')}</ul>
+      </div>
+    ` : ''}
+  `;
+
+  // Update event listeners
+  document.querySelectorAll('.vn-posts a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const postLink = e.target.closest('a').getAttribute('data-post-link');
+      fetchAndRenderDetails(postLink);
+    });
+  });
+}
+
+    // Show the index page
+function showIndexPage() {
+  document.getElementById('index-container').style.display = 'block';
+  document.getElementById('details-container').style.display = 'none';
+  document.getElementById('page-title').textContent = 'Visual Novels';
+
+  // Reset Open Graph meta tags to default values
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDescription = document.querySelector('meta[property="og:description"]');
+  const ogImage = document.querySelector('meta[property="og:image"]');
+
+  if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
+  if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
+  if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
+}
+
+    // Show the details page
+    function showDetailsPage() {
+      document.getElementById('index-container').style.display = 'none';
+      document.getElementById('details-container').style.display = 'block';
+      document.getElementById('page-title').textContent = 'Details';
+    }
+
+    // Back to index page
+    document.getElementById('back-to-index').addEventListener('click', (e) => {
+      e.preventDefault();
+      showIndexPage();
+    });
+
+    // Fetch initial data on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchVisualNovels(`${baseUrl}vn/posts/index.json`);
+    });
+
+  </script>
+    <script src="/page/src/search.js"></script>
+  
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Novels</title>
+    <meta property="og:title" content="Visual Novels">
+  <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
+  <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .vn-container {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    .vn-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .vn-title a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    .vn-title a:hover {
+      text-decoration: underline;
+    }
+    .vn-description {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .vn-image {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    .pagination {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .pagination a {
+      margin: 0 5px;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .pagination a.active {
+      font-weight: bold;
+      color: #000;
+    }
+    .vn-developers, .vn-tags, .vn-screenshots {
+      margin-bottom: 10px;
+    }
+    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .vn-developers li, .vn-tags li {
+      display: inline-block;
+      margin-right: 10px;
+      background-color: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 3px;
+    }
+    .vn-screenshots img {
+      max-width: 100px;
+      margin-right: 10px;
+    }
+    #details-container {
+      display: none; /* Hide details by default */
+    }
+    #back-to-index {
+      display: block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .vn-post-image {
+      max-width: 50px;
+      height: auto;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+  <header>
+  <h1 id="page-title">Visual Novels</h1>
+  <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
+</header>
+<body>
+<main>
+  <section id="index-container">
+    <div id="search-results" style="margin-top: 10px;"></div>
+    <div id="vn-list"></div>
+    <div id="pagination" class="pagination"></div>
+  </section>
+  <section id="details-container" class="vn-container">
+    <article id="vn-details"></article>
+    <a href="#" id="back-to-index">Back to List</a>
+  </section>
+</main>
+  <footer>
+2025
+  </footer>
+  <script>
+    const baseUrl = 'https://yuushaexa.github.io/headless/';
+    const hobby = 'vn';
+
+    // Fetch and display visual novels
+    async function fetchVisualNovels(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        renderVisualNovels(data.posts);
+        renderPagination(data.pagination);
+      } catch (error) {
+        console.error('Error fetching visual novels:', error);
+      }
+    }
+
+    // Render visual novels into the template
     function renderVisualNovels(posts) {
       const vnList = document.getElementById('vn-list');
       vnList.innerHTML = posts.map(vn => `
@@ -255,13 +570,12 @@ function updateOpenGraphMetaTags(vn) {
           <div class="vn-posts">
             <strong>Visual Novels:</strong>
             <ul>${developer.posts.map(post => `
-              <div class="vn-container">
-          <div class="vn-title">
-            <a href="#" data-vn-link="${vn.link}">${vn.title}</a>
-          </div>
-          <div class="vn-description">${vn.description}</div>
-          ${vn.image?.url ? `<img class="vn-image" src="${vn.image.url}" alt="${vn.title}">` : ''}
-        </div>
+              <li>
+                <a href="#" data-vn-link="${post.link}">
+                  ${post.title}
+                  ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
+                </a>
+              </li>
             `).join('')}</ul>
           </div>
         ` : ''}
