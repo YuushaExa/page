@@ -245,38 +245,39 @@ function updateOpenGraphMetaTags(post) {
     }
 
     // Render developer details into the template
-    function renderDeveloperDetails(developer) {
-      const detailsContainer = document.getElementById('vn-details');
-      detailsContainer.innerHTML = `
-        <div class="vn-title">${developer.name}</div>
-        <div class="vn-description">${developer.description || 'No description available.'}</div>
-        ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
-        ${developer.posts?.length ? `
-          <div class="vn-posts">
-            <strong>Visual Novels:</strong>
-            <ul>${developer.posts.map(post => `
-              <li>
-                <a href="#" data-vn-link="${post.link}">
-                  ${post.title}
-                  ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
-                </a>
-              </li>
-            `).join('')}</ul>
-          </div>
-        ` : ''}
-      `;
+function renderDeveloperDetails(developer) {
+  const detailsContainer = document.getElementById('vn-details');
+  detailsContainer.innerHTML = `
+    <div class="vn-title">${developer.name}</div>
+    <div class="vn-description">${developer.description || 'No description available.'}</div>
+    ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
+    ${developer.posts?.length ? `
+      <div class="vn-posts">
+        <strong>Visual Novels:</strong>
+        <ul>${developer.posts.map(post => `
+          <li>
+            <a href="#" data-vn-link="${post.link}">
+              ${post.title}
+              ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
+            </a>
+          </li>
+        `).join('')}</ul>
+      </div>
+    ` : ''}
+  `;
 
-   updateOpenGraphMetaTags(post);
-      
-      // Add event listeners to visual novel links
-      document.querySelectorAll('.vn-posts a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
-          fetchAndRenderDetails(vnLink);
-        });
-      });
-    }
+  // Update Open Graph meta tags
+  updateOpenGraphMetaTags(post);
+
+  // Re-attach event listeners to visual novel links
+  document.querySelectorAll('.vn-posts a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const vnLink = e.target.closest('a').getAttribute('data-vn-link');
+      fetchAndRenderDetails(vnLink);
+    });
+  });
+}
 
     // Show the index page
 function showIndexPage() {
