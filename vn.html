@@ -209,7 +209,7 @@ function renderDetails(post) {
     ` : ''}
   `;
 
-   updateOpenGraphMetaTags(vn);
+   updateOpenGraphMetaTags(post);
 
   // Attach event listeners to developer links AFTER rendering
   document.querySelectorAll('.vn-developers a').forEach(link => {
@@ -266,7 +266,7 @@ function updateOpenGraphMetaTags(post) {
         ` : ''}
       `;
 
-   updateOpenGraphMetaTags(vn);
+   updateOpenGraphMetaTags(post);
       
       // Add event listeners to visual novel links
       document.querySelectorAll('.vn-posts a').forEach(link => {
