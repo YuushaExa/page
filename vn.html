@@ -8,339 +8,355 @@
   <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
   <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    .vn-container {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 5px;
-    }
-    .vn-title {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .vn-title a {
-      text-decoration: none;
-      color: #007bff;
-    }
-    .vn-title a:hover {
-      text-decoration: underline;
-    }
-    .vn-description {
-      font-size: 16px;
-      color: #555;
-      margin-bottom: 10px;
-    }
-    .vn-image {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 10px;
-    }
-    .pagination {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .pagination a {
-      margin: 0 5px;
-      text-decoration: none;
-      color: #007bff;
-    }
-    .pagination a.active {
-      font-weight: bold;
-      color: #000;
-    }
-    .vn-developers, .vn-tags, .vn-screenshots {
-      margin-bottom: 10px;
-    }
-    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    .vn-developers li, .vn-tags li {
-      display: inline-block;
-      margin-right: 10px;
-      background-color: #f0f0f0;
-      padding: 5px 10px;
-      border-radius: 3px;
-    }
-    .vn-screenshots img {
-      max-width: 100px;
-      margin-right: 10px;
-    }
-    #details-container {
-      display: none; /* Hide details by default */
-    }
-    #back-to-index {
-      display: block;
-      margin-top: 20px;
-      text-decoration: none;
-      color: #007bff;
-    }
-    .vn-post-image {
-      max-width: 50px;
-      height: auto;
-      margin-left: 10px;
-    }
+  /* css/list.css */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.section {
+  padding: 20px 0;
+}
+
+.content {
+  margin-bottom: 30px;
+}
+
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+  margin-top: -0.75rem;
+}
+
+.columns.is-multiline {
+  flex-wrap: wrap;
+}
+
+.columns.is-centered {
+  justify-content: center;
+}
+
+.column {
+  display: block;
+  flex-basis: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 0.75rem;
+}
+
+.column.is-narrow {
+  flex: none;
+}
+
+/* Card styles */
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 3px rgba(10,10,10,0.1);
+  color: #4a4a4a;
+  margin-bottom: 20px;
+  position: relative;
+  width: 100%;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-image {
+  display: block;
+  position: relative;
+  padding-top: 150%; /* Aspect ratio for image */
+  overflow: hidden;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.card-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.category, .genres, .developer, .year {
+  display: inline-block;
+  font-size: 0.875rem;
+  margin-right: 0.5rem;
+  color: #363636;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.AddList {
+  background: #f5f5f5;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.rating-menu2 {
+  display: inline-block;
+  width: 100px;
+  height: 20px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* Responsive columns */
+@media screen and (min-width: 769px) {
+  .column {
+    flex: none;
+    width: calc(33.333% - 1.5rem);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .column {
+    width: calc(50% - 1.5rem);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .column {
+    width: 100%;
+  }
+}
   </style>
 </head>
-  <header>
-  <h1 id="page-title">Visual Novels</h1>
-  <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
-</header>
+
 <body>
-<main>
-  <section id="index-container">
-    <div id="search-results" style="margin-top: 10px;"></div>
-    <div id="vn-list"></div>
-    <div id="pagination" class="pagination"></div>
-  </section>
-  <section id="details-container" class="vn-container">
-    <article id="vn-details"></article>
-    <a href="#" id="back-to-index">Back to List</a>
-  </section>
-</main>
-  <footer>
-2025
-  </footer>
+  <header>
+    <h1 id="page-title">Visual Novels</h1>
+    <input type="text" id="search-bar" placeholder="Search Visual Novels..." class="search-input">
+  </header>
+
+  <main id="main-container">
+    <!-- This will be populated by JavaScript -->
+  </main>
+
+  <footer>2025</footer>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/list.css">
+  
+  <!-- JavaScript -->
+  <script src="js/main.js"></script>
+  <script src="js/search.js"></script>
+</body>
+</html>
   <script>
-    const baseUrl = 'https://yuushaexa.github.io/headless/';
-    const hobby = 'vn';
+const baseUrl = 'https://yuushaexa.github.io/headless/';
+const hobby = 'vn';
 
-    // Fetch and display visual novels
-    async function fetchVisualNovels(url) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        renderVisualNovels(data.posts);
-        renderPagination(data.pagination);
-      } catch (error) {
-        console.error('Error fetching visual novels:', error);
-      }
-    }
+// Main function to initialize the page
+async function initializePage() {
+  await fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
+  setupEventListeners();
+}
 
-    // Render visual novels into the template
-    function renderVisualNovels(posts) {
-      const vnList = document.getElementById('vn-list');
-      vnList.innerHTML = posts.map(post => `
-        <div class="vn-container">
-          <div class="vn-title">
-            <a href="#" data-vn-link="${post.link}">${post.title}</a>
+// Fetch and display visual novels
+async function fetchVisualNovels(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    renderMainContent(data);
+  } catch (error) {
+    console.error('Error fetching visual novels:', error);
+  }
+}
+
+// Render main content area
+function renderMainContent(data) {
+  const mainContainer = document.getElementById('main-container');
+  
+  // Create the container structure similar to Hugo
+  mainContainer.innerHTML = `
+    <div class="container">
+      <div class="section">
+        <div class="content">
+          <div class="columns is-multiline" id="posts-container">
+            ${data.posts.map(post => createPostCard(post)).join('')}
           </div>
-          <div class="vn-description">${post.description}</div>
-          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+          <div class="columns is-centered">
+            <div class="column is-narrow">
+              ${createPagination(data.pagination)}
+            </div>
+          </div>
         </div>
-      `).join('');
-
-      // Add event listeners to visual novel links
-      document.querySelectorAll('.vn-title a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const vnLink = e.target.getAttribute('data-vn-link');
-          fetchAndRenderDetails(vnLink);
-        });
-      });
-    }
-
-    // Render pagination
-    function renderPagination(pagination) {
-      const paginationContainer = document.getElementById('pagination');
-      paginationContainer.innerHTML = `
-        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
-        <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
-      `;
-
-      // Add event listeners to pagination links
-      document.querySelectorAll('#pagination a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const page = e.target.getAttribute('data-page');
-          fetchVisualNovels(`${baseUrl}/${page}`);
-        });
-      });
-    }
-
-    // Fetch and render details for a specific visual novel
-    async function fetchAndRenderDetails(vnLink) {
-      try {
-        const response = await fetch(`${baseUrl}${vnLink}`);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const vnDetails = await response.json();
-        renderDetails(vnDetails);
-        showDetailsPage();
-      } catch (error) {
-        console.error('Error fetching visual novel details:', error);
-      }
-    }
-
-    // Render details into the template
-function renderDetails(post) {
-  const detailsContainer = document.getElementById('vn-details');
-  detailsContainer.innerHTML = `
-    <div class="vn-title">${post.title}</div>
-    <div class="vn-description">${post.description}</div>
-    ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-    ${post.developers?.length ? `
-      <div class="vn-developers">
-        <strong>Developers:</strong>
-        <ul>${post.developers.map(post => `
-          <li>
-            <a href="#" data-developer-link="vn/developers/${post.id}.json">${post.name}</a>
-          </li>
-        `).join('')}</ul>
       </div>
-    ` : ''}
-    ${post.tags?.length ? `
-      <div class="vn-tags">
-        <strong>Tags:</strong>
-        <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
-      </div>
-    ` : ''}
-    ${post.screenshots?.length ? `
-      <div class="vn-screenshots">
-        <strong>Screenshots:</strong>
-        <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
-      </div>
-    ` : ''}
+    </div>
   `;
-
-   updateOpenGraphMetaTags(post);
-
-  // Attach event listeners to developer links AFTER rendering
-  document.querySelectorAll('.vn-developers a').forEach(link => {
+  
+  // Add event listeners to post cards
+  document.querySelectorAll('.post-card-link').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      const developerLink = link.getAttribute('data-developer-link');
+      const vnLink = e.currentTarget.getAttribute('data-vn-link');
+      fetchAndRenderDetails(vnLink);
+    });
+  });
+  
+  // Add event listeners to pagination links
+  document.querySelectorAll('.pagination-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = e.currentTarget.getAttribute('data-page');
+      fetchVisualNovels(`${baseUrl}${hobby}/posts/${page}`);
+    });
+  });
+}
+
+// Create post card HTML (similar to your Hugo partial)
+function createPostCard(post) {
+  return `
+    <div class="column">
+      <div class="card">
+        <span id="ratingNumber"></span>
+        <a class="card-image post-card-link" href="#" data-vn-link="${post.link}">
+          <img src="${post.image?.url || 'https://via.placeholder.com/200x300'}" alt="${post.title}" crossorigin="anonymous">
+        </a>
+        <div class="card-content">
+          ${post.platform ? `<a class="category" href="/platform/${post.platform[0].toLowerCase()}">${post.platform[0]}</a>` : ''}
+          ${post.tags?.length ? `
+            <div class="genres">
+              ${post.tags.map((tag, idx) => `
+                ${idx > 0 ? ', ' : ''}
+                <a href="/tags/${tag.toLowerCase().replace(/\s+/g, '-')}">#${tag}</a>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${post.developers?.length ? `
+            <a class="developer" href="/developer/${post.developers[0].name.toLowerCase().replace(/\s+/g, '-')}">
+              ${post.developers[0].name}
+            </a>
+          ` : ''}
+          ${post.year ? `<a class="year" href="/year/${post.year}">${post.year}</a>` : ''}
+          <button class="AddList">Add List</button>
+          <div class="rating-menu2"></div>
+          <a class="title is-4 post-card-link" href="#" data-vn-link="${post.link}">${post.title}</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Create pagination HTML
+function createPagination(pagination) {
+  return `
+    <nav class="pagination" role="navigation" aria-label="pagination">
+      ${pagination.previousPage ? `
+        <a class="pagination-previous pagination-link" data-page="${pagination.previousPage}">Previous</a>
+      ` : ''}
+      ${pagination.nextPage ? `
+        <a class="pagination-next pagination-link" data-page="${pagination.nextPage}">Next</a>
+      ` : ''}
+      <span class="pagination-info">Page ${pagination.currentPage} of ${pagination.totalPages}</span>
+    </nav>
+  `;
+}
+
+// Keep your existing details functions, but modify them to work with the new structure
+async function fetchAndRenderDetails(vnLink) {
+  try {
+    const response = await fetch(`${baseUrl}${vnLink}`);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const vnDetails = await response.json();
+    renderDetailsPage(vnDetails);
+  } catch (error) {
+    console.error('Error fetching visual novel details:', error);
+  }
+}
+
+function renderDetailsPage(post) {
+  const mainContainer = document.getElementById('main-container');
+  
+  mainContainer.innerHTML = `
+    <div class="container">
+      <div class="section">
+        <div class="content">
+          <article class="vn-details">
+            <h1 class="title">${post.title}</h1>
+            <div class="description">${post.description}</div>
+            ${post.image?.url ? `<img src="${post.image.url}" alt="${post.title}" class="detail-image">` : ''}
+            
+            ${post.developers?.length ? `
+              <div class="developers">
+                <h2>Developers</h2>
+                <ul>
+                  ${post.developers.map(dev => `
+                    <li>
+                      <a href="#" data-developer-link="vn/developers/${dev.id}.json">${dev.name}</a>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            ${post.tags?.length ? `
+              <div class="tags">
+                <h2>Tags</h2>
+                <ul>
+                  ${post.tags.map(tag => `<li>${tag}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            ${post.screenshots?.length ? `
+              <div class="screenshots">
+                <h2>Screenshots</h2>
+                <div class="screenshot-gallery">
+                  ${post.screenshots.map(ss => `
+                    <img src="${ss.url}" alt="Screenshot" class="screenshot">
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            <a href="#" id="back-to-list" class="button is-link">Back to List</a>
+          </article>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add event listener to back button
+  document.getElementById('back-to-list').addEventListener('click', (e) => {
+    e.preventDefault();
+    fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
+  });
+  
+  // Add event listeners to developer links
+  document.querySelectorAll('[data-developer-link]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const developerLink = e.currentTarget.getAttribute('data-developer-link');
       fetchAndRenderDeveloperDetails(developerLink);
     });
   });
 }
 
-function updateOpenGraphMetaTags(post) {
-  const ogTitle = document.querySelector('meta[property="og:title"]');
-  const ogDescription = document.querySelector('meta[property="og:description"]');
-  const ogImage = document.querySelector('meta[property="og:image"]');
-
-  if (ogTitle) ogTitle.setAttribute('content', post.title || 'Visual Novels');
-  if (ogDescription) ogDescription.setAttribute('content', post.description || 'No description available.');
-  if (ogImage && post.image?.url) ogImage.setAttribute('content', post.image.url);
-}
-
-    // Fetch and render details for a specific developer
-    async function fetchAndRenderDeveloperDetails(developerLink) {
-      try {
-        const response = await fetch(`${baseUrl}${developerLink}`);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const developerDetails = await response.json();
-        renderDeveloperDetails(developerDetails);
-        showDetailsPage();
-      } catch (error) {
-        console.error('Error fetching developer details:', error);
-      }
-    }
-
-    // Render developer details into the template
-function renderDeveloperDetails(developer) {
-  const detailsContainer = document.getElementById('vn-details');
-  detailsContainer.innerHTML = `
-    <div class="vn-title">${developer.name}</div>
-    <div class="vn-description">${developer.description || 'No description available.'}</div>
-    ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
-    ${developer.posts?.length ? `
-      <div class="vn-posts">
-        <strong>Visual Novels:</strong>
-        ${developer.posts.map(post => `
-  <div class="vn-container">
-          <div class="vn-title">
-            <a href="#" data-vn-link="${post.link}">${post.title}</a>
-          </div>
-          <div class="vn-description">${post.description}</div>
-          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-        </div>                   
-        `).join('')}
-      </div>
-    ` : ''}
-  `;
-
-  // Update Open Graph meta tags
-  updateOpenGraphMetaTags(developer);
-
-  // Re-attach event listeners to visual novel links
-  document.querySelectorAll('.vn-posts a').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const vnLink = e.target.closest('a').getAttribute('data-vn-link');
-      fetchAndRenderDetails(vnLink);
-    });
-  });
-}
-
-    // Show the index page
-function showIndexPage() {
-  document.getElementById('index-container').style.display = 'block';
-  document.getElementById('details-container').style.display = 'none';
-  document.getElementById('page-title').textContent = 'Visual Novels';
-
-  // Reset Open Graph meta tags to default values
-  const ogTitle = document.querySelector('meta[property="og:title"]');
-  const ogDescription = document.querySelector('meta[property="og:description"]');
-  const ogImage = document.querySelector('meta[property="og:image"]');
-
-  if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
-  if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
-  if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
-}
-
-    // Show the details page
-    function showDetailsPage() {
-      document.getElementById('index-container').style.display = 'none';
-      document.getElementById('details-container').style.display = 'block';
-      document.getElementById('page-title').textContent = 'Details';
-    }
-
-    // Back to index page
-    document.getElementById('back-to-index').addEventListener('click', (e) => {
-      e.preventDefault();
-      showIndexPage();
-    });
-
-    // Fetch initial data on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
-    });
-
-// Navigation handler
-document.addEventListener('click', (e) => {
-  const vnLink = e.target.closest('[data-vn-link]');
-  if (vnLink) {
-    e.preventDefault();
-    const link = vnLink.getAttribute('data-vn-link');
-    fetchAndRenderDetails(link);
-    window.history.pushState({ page: 'details' }, '', `#${link}`);
-    return;
-  }
-
-  if (e.target.matches('#back-to-index')) {
-    e.preventDefault();
-    showIndexPage();
-    window.history.pushState({ page: 'index' }, '', '#index');
-  }
-});
-
-// Handle browser back/forward
-window.addEventListener('popstate', (e) => {
-  if (window.location.hash.includes('details')) {
-    const link = window.location.hash.substring(1);
-    fetchAndRenderDetails(link);
-  } else {
-    showIndexPage();
-  }
-});
+// Initialize the page when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializePage);
   </script>
     <script src="/page/src/search.js"></script>
   
