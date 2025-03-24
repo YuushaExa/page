@@ -314,56 +314,33 @@ function showIndexPage() {
       fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
     });
 
-
-    class Router {
-  constructor() {
-    this.routes = [];
-    this.currentPath = window.location.pathname;
-    this.init();
+// Navigation handler
+document.addEventListener('click', (e) => {
+  const vnLink = e.target.closest('[data-vn-link]');
+  if (vnLink) {
+    e.preventDefault();
+    const link = vnLink.getAttribute('data-vn-link');
+    fetchAndRenderDetails(link);
+    window.history.pushState({ page: 'details' }, '', `#${link}`);
+    return;
   }
 
-  add(path, callback) {
-    this.routes.push({ path, callback });
+  if (e.target.matches('#back-to-index')) {
+    e.preventDefault();
+    showIndexPage();
+    window.history.pushState({ page: 'index' }, '', '#index');
   }
+});
 
-  init() {
-    window.addEventListener('popstate', () => {
-      this.currentPath = window.location.pathname;
-      this.check();
-    });
-    
-    document.addEventListener('click', (e) => {
-      if (e.target.matches('[data-link]')) {
-        e.preventDefault();
-        this.navigateTo(e.target.href);
-      }
-    });
-    
-    this.check();
+// Handle browser back/forward
+window.addEventListener('popstate', (e) => {
+  if (window.location.hash.includes('details')) {
+    const link = window.location.hash.substring(1);
+    fetchAndRenderDetails(link);
+  } else {
+    showIndexPage();
   }
-
-  navigateTo(path) {
-    history.pushState({}, '', path);
-    this.currentPath = path;
-    this.check();
-  }
-
-  check() {
-    const matchedRoute = this.routes.find(route => 
-      this.currentPath.includes(route.path)
-    );
-    
-    if (matchedRoute) {
-      matchedRoute.callback();
-    }
-  }
-}
-
-// Usage:
-const router = new Router();
-router.add('/vn/', showIndexPage);
-router.add('/vn/details', showDetailsPage);
-    
+});
   </script>
     <script src="/page/src/search.js"></script>
   
