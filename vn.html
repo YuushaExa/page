@@ -314,6 +314,56 @@ function showIndexPage() {
       fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
     });
 
+
+    class Router {
+  constructor() {
+    this.routes = [];
+    this.currentPath = window.location.pathname;
+    this.init();
+  }
+
+  add(path, callback) {
+    this.routes.push({ path, callback });
+  }
+
+  init() {
+    window.addEventListener('popstate', () => {
+      this.currentPath = window.location.pathname;
+      this.check();
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('[data-link]')) {
+        e.preventDefault();
+        this.navigateTo(e.target.href);
+      }
+    });
+    
+    this.check();
+  }
+
+  navigateTo(path) {
+    history.pushState({}, '', path);
+    this.currentPath = path;
+    this.check();
+  }
+
+  check() {
+    const matchedRoute = this.routes.find(route => 
+      this.currentPath.includes(route.path)
+    );
+    
+    if (matchedRoute) {
+      matchedRoute.callback();
+    }
+  }
+}
+
+// Usage:
+const router = new Router();
+router.add('/vn/', showIndexPage);
+router.add('/vn/details', showDetailsPage);
+    
   </script>
     <script src="/page/src/search.js"></script>
   
