@@ -359,8 +359,6 @@
         searchResults.innerHTML = vnDetailsList.map(post => `
             <div class="vn-container">
               <div class="vn-title"><a href="#/${post.link}">${post.title || `VN ${post.id}`}</a></div>
-              <div class="vn-description">${post.description || 'No description.'}</div>
-              ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title || `VN ${post.id}`}">` : ''}
             </div>`).join('');
     }
 
