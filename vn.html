@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
-  <meta property="og:title" content="Visual Novels">
-  <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
-  <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
+  <!-- Open Graph Meta Tags Removed -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -107,7 +105,6 @@
 <body>
   <header>
     <h1 id="page-title">Visual Novels</h1>
-    <!-- Search bar kept for now, functionality might need adjustment -->
     <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
   </header>
 
@@ -121,9 +118,7 @@
     </section>
 
     <section id="details-container">
-        <!-- Details will be rendered here -->
          <div id="vn-details" class="vn-container"></div>
-         <!-- Changed Back link to use hash -->
          <a href="#/" id="back-to-index">Back to List</a>
     </section>
   </main>
@@ -144,11 +139,13 @@
             posts: [],
             pagination: {}
         },
-        detailsCache: { // Cache for VN and Developer details
+        detailsCache: { // Cache for VN, Developer details, and preloaded index pages
             vn: {},
-            developer: {}
+            developer: {},
+            index: {} // Cache for preloaded index pages (key: full URL)
         },
-        currentDetail: null // Holds the data for the currently viewed detail page
+        preloadingUrls: new Set(), // Track URLs currently being preloaded
+        currentDetail: null
     };
 
     // --- UI Elements ---
@@ -159,6 +156,114 @@
     const paginationContainer = document.getElementById('pagination');
     const vnDetailsContainer = document.getElementById('vn-details');
     const pageTitle = document.getElementById('page-title');
+
+    // --- Preloading Setup ---
+    let preloadObserver;
+
+    function setupPreloadObserver() {
+        // Disconnect previous observer if exists
+        if (preloadObserver) {
+            preloadObserver.disconnect();
+        }
+
+        const options = {
+            root: null, // relative to document viewport
+            rootMargin: '0px',
+            threshold: 0.1 // Trigger when 10% of the element is visible
+        };
+
+        preloadObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const linkElement = entry.target;
+                    const href = linkElement.getAttribute('href');
+                    if (href && href.startsWith('#/')) {
+                        preloadLinkData(href, linkElement.dataset.preloadType); // Pass type if needed
+                        // Stop observing this element once preload is initiated
+                        observer.unobserve(linkElement);
+                    }
+                }
+            });
+        }, options);
+    }
+
+    async function preloadLinkData(hashHref, typeHint) {
+        let apiUrl = '';
+        let cacheKey = hashHref; // Use hash as the primary identifier
+        let cacheType = null; // 'vn', 'developer', 'index'
+
+        // Determine API URL and cache type from hash
+        if (hashHref.startsWith(`#/${hobby}/posts/`)) {
+            apiUrl = `${baseUrl}${hashHref.substring(2)}`; // e.g., vn/posts/some-post.json
+            cacheType = 'vn';
+        } else if (hashHref.startsWith(`#/${hobby}/developers/`)) {
+            apiUrl = `${baseUrl}${hashHref.substring(2)}`; // e.g., vn/developers/some-dev.json
+            cacheType = 'developer';
+        } else if (hashHref.startsWith('#/page/')) {
+            apiUrl = `${baseUrl}${hashHref.substring(7)}`; // e.g., vn/posts/index-2.json
+            cacheType = 'index';
+             cacheKey = apiUrl; // Use full API URL as cache key for index pages
+        } else if (hashHref === '#/') {
+             apiUrl = `${baseUrl}${hobby}/posts/index.json`;
+             cacheType = 'index';
+             cacheKey = apiUrl;
+        } else {
+            // console.log('Preload: Skipping unknown hash format:', hashHref);
+            return; // Don't preload unknown formats
+        }
+
+        // Check cache and preloading status
+        if (
+            (cacheType === 'vn' && appState.detailsCache.vn[cacheKey]) ||
+            (cacheType === 'developer' && appState.detailsCache.developer[cacheKey]) ||
+            (cacheType === 'index' && appState.detailsCache.index[cacheKey]) ||
+            appState.preloadingUrls.has(apiUrl)
+           ) {
+            // console.log('Preload: Already cached or preloading:', apiUrl);
+            return;
+        }
+
+        // console.log('Preload: Starting fetch for', apiUrl);
+        appState.preloadingUrls.add(apiUrl);
+
+        try {
+            const data = await fetchData(apiUrl); // Use existing fetch function
+            if (data) {
+                // Store in appropriate cache
+                if (cacheType === 'vn') {
+                    appState.detailsCache.vn[cacheKey] = data;
+                     // console.log('Preload: Cached VN', cacheKey);
+                } else if (cacheType === 'developer') {
+                    appState.detailsCache.developer[cacheKey] = data;
+                    // console.log('Preload: Cached Dev', cacheKey);
+                } else if (cacheType === 'index') {
+                    appState.detailsCache.index[cacheKey] = data;
+                    // console.log('Preload: Cached Index', cacheKey);
+                }
+            }
+        } catch (error) {
+            console.error('Preload: Error fetching', apiUrl, error);
+            // Optional: Handle preload error (e.g., maybe retry later?)
+        } finally {
+            appState.preloadingUrls.delete(apiUrl); // Remove from active preloading list
+        }
+    }
+
+     function observeLinks(containerElement) {
+        if (!preloadObserver) {
+             console.warn("Preload observer not initialized!");
+             return;
+         }
+         // Observe all relevant links within the container
+         const linksToObserve = containerElement.querySelectorAll('a[href^="#/"]');
+         linksToObserve.forEach(link => {
+              // Optional: Add data attribute to help identify link type if needed later
+             // if (link.closest('.vn-title')) link.dataset.preloadType = 'vn';
+             // else if (link.closest('.vn-developers')) link.dataset.preloadType = 'developer';
+             // else if (link.closest('.pagination')) link.dataset.preloadType = 'page';
+             preloadObserver.observe(link);
+         });
+     }
 
     // --- Loading Indicator ---
     function showLoading() {
@@ -174,32 +279,34 @@
     }
 
     // --- API Fetching ---
+    // Note: Modified to NOT update UI directly on error, just return null/throw
     async function fetchData(url) {
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
+            if (!response.ok) throw new Error(`Network response was not ok for ${url} (Status: ${response.status})`);
             return await response.json();
         } catch (error) {
             console.error('Error fetching data:', error);
-            vnDetailsContainer.innerHTML = `<p style="color: red;">Error loading data: ${error.message}</p>`; // Show error in details view for now
-            showDetailsView(); // Switch to details view to show error
+            // No UI updates here, let the caller handle it
             return null; // Indicate failure
         }
     }
 
     // --- Rendering Functions ---
 
-    function renderIndexView() {
+    function renderIndexView(sourceData) { // Accept data directly
         hideLoading();
         indexContainer.style.display = 'block';
         detailsContainer.style.display = 'none';
         pageTitle.textContent = 'Visual Novels';
-        resetOpenGraphMetaTags(); // Reset OG tags for index
+        appState.currentDetail = null; // Clear current detail when showing index
 
-        vnListContainer.innerHTML = appState.index.posts.map(post => `
+        // Disconnect observer before clearing content
+        if (preloadObserver) preloadObserver.disconnect();
+
+        vnListContainer.innerHTML = sourceData.posts.map(post => `
             <div class="vn-container">
                 <div class="vn-title">
-                    <!-- Use hash for links -->
                     <a href="#/${post.link}">${post.title}</a>
                 </div>
                 <div class="vn-description">${post.description || 'No description.'}</div>
@@ -207,12 +314,15 @@
             </div>
         `).join('');
 
-        const pag = appState.index.pagination;
+        const pag = sourceData.pagination;
         paginationContainer.innerHTML = `
             ${pag.previousPage ? `<a href="#/page/${pag.previousPage}">Previous</a>` : '<span>Previous</span>'}
             <span>Page ${pag.currentPage} of ${pag.totalPages}</span>
             ${pag.nextPage ? `<a href="#/page/${pag.nextPage}">Next</a>` : '<span>Next</span>'}
         `;
+
+        // Re-observe links in the newly rendered content
+        observeLinks(indexContainer);
 
         // Search functionality might need revisiting depending on requirements
         // If search should filter current view, it's fine.
@@ -223,9 +333,11 @@
         hideLoading();
         indexContainer.style.display = 'none';
         detailsContainer.style.display = 'block';
-        pageTitle.textContent = data.title || data.name || 'Details'; // Use title or name
-        appState.currentDetail = data; // Store current detail data in state
-        updateOpenGraphMetaTags(data); // Update OG tags
+        pageTitle.textContent = data.title || data.name || 'Details';
+        appState.currentDetail = data;
+
+        // Disconnect observer before clearing content
+        if (preloadObserver) preloadObserver.disconnect();
 
         let content = '';
         if (type === 'vn') {
@@ -238,7 +350,6 @@
                     <strong>Developers:</strong>
                     <ul>${data.developers.map(dev => `
                     <li>
-                        <!-- Use hash for developer links -->
                         <a href="#/vn/developers/${dev.id}.json">${dev.name}</a>
                     </li>
                     `).join('')}</ul>
@@ -268,7 +379,6 @@
                     ${data.posts.map(post => `
                     <div class="vn-container">
                         <div class="vn-title">
-                             <!-- Use hash for VN links -->
                             <a href="#/${post.link}">${post.title}</a>
                         </div>
                         <div class="vn-description">${post.description || 'No description.'}</div>
@@ -280,39 +390,15 @@
             `;
         }
         vnDetailsContainer.innerHTML = content;
+
+         // Re-observe links in the newly rendered content
+         observeLinks(detailsContainer);
+         // Also observe the back link
+         const backLink = document.getElementById('back-to-index');
+         if (backLink) preloadObserver.observe(backLink);
     }
 
-     // --- Open Graph Meta Tag Updates ---
-    function updateOpenGraphMetaTags(data) {
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogDescription = document.querySelector('meta[property="og:description"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-
-        const title = data.title || data.name || 'Visual Novels';
-        const description = data.description || 'No description available.';
-        const imageUrl = data.image?.url;
-
-        if (ogTitle) ogTitle.setAttribute('content', title);
-        if (ogDescription) ogDescription.setAttribute('content', description);
-        // Only update image if one exists, otherwise keep default/previous
-        if (ogImage && imageUrl) {
-            ogImage.setAttribute('content', imageUrl);
-        } else if (ogImage) {
-            // Optionally reset to default if no image
-             ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
-        }
-    }
-
-    function resetOpenGraphMetaTags() {
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogDescription = document.querySelector('meta[property="og:description"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-
-        if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
-        if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
-        if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
-    }
-
+    // --- Open Graph Meta Tag Updates Removed ---
 
     // --- Routing Logic ---
     async function handleRouteChange() {
@@ -325,13 +411,28 @@
         if (hash === '#/' || hash.startsWith('#/page/')) {
             appState.currentPageType = 'index';
             const pagePath = hash.startsWith('#/page/') ? hash.substring(7) : `${hobby}/posts/index.json`;
-            const data = await fetchData(`${baseUrl}${pagePath}`);
+            const apiUrl = `${baseUrl}${pagePath}`;
+            let data = null;
+
+            // Check cache first
+             if (appState.detailsCache.index[apiUrl]) {
+                 // console.log('Routing: Using cached index data for', apiUrl);
+                 data = appState.detailsCache.index[apiUrl];
+             } else {
+                 // console.log('Routing: Fetching index data for', apiUrl);
+                 data = await fetchData(apiUrl);
+                 if (data) {
+                     appState.detailsCache.index[apiUrl] = data; // Cache fetched data
+                 }
+             }
+
+
             if (data) {
+                // Update state *only* if we are rendering this page now
                 appState.index.posts = data.posts;
                 appState.index.pagination = data.pagination;
-                renderIndexView();
+                renderIndexView(data); // Pass data directly
             } else {
-                // Handle fetch error - maybe show an error message on index
                  hideLoading(); // Hide loading even if error
                  indexContainer.style.display = 'block'; // Show index container
                  vnListContainer.innerHTML = '<p style="color: red;">Could not load visual novels list.</p>';
@@ -341,47 +442,68 @@
         // VN Detail Route
         else if (hash.startsWith(`#/${hobby}/posts/`)) {
             appState.currentPageType = 'vnDetail';
-            const vnLink = hash.substring(2); // e.g., vn/posts/some-post.json
+            const vnLinkHash = hash; // Use full hash as cache key e.g., #/vn/posts/some-post.json
+            let data = null;
 
             // Check cache first
-            if (appState.detailsCache.vn[vnLink]) {
-                renderDetailsView(appState.detailsCache.vn[vnLink], 'vn');
+            if (appState.detailsCache.vn[vnLinkHash]) {
+                 // console.log('Routing: Using cached VN data for', vnLinkHash);
+                 data = appState.detailsCache.vn[vnLinkHash];
             } else {
-                const data = await fetchData(`${baseUrl}${vnLink}`);
-                if (data) {
-                    appState.detailsCache.vn[vnLink] = data; // Cache the data
-                    renderDetailsView(data, 'vn');
-                } else {
-                     hideLoading(); // Stop loading indicator on error
-                     // Error already shown by fetchData in details container
-                }
+                 const apiUrl = `${baseUrl}${hash.substring(2)}`;
+                 // console.log('Routing: Fetching VN data for', apiUrl);
+                 data = await fetchData(apiUrl);
+                 if (data) {
+                     appState.detailsCache.vn[vnLinkHash] = data; // Cache the data
+                 }
+            }
+
+            if (data) {
+                renderDetailsView(data, 'vn');
+            } else {
+                 hideLoading();
+                 detailsContainer.style.display = 'block'; // Ensure details view is visible for error message
+                 vnDetailsContainer.innerHTML = `<p style="color: red;">Error loading visual novel details.</p>`;
             }
         }
         // Developer Detail Route
-         else if (hash.startsWith(`#/${hobby}/developers/`)) { // Adjusted prefix based on generated links
+         else if (hash.startsWith(`#/${hobby}/developers/`)) {
             appState.currentPageType = 'developerDetail';
-            const devLink = hash.substring(2); // e.g., vn/developers/some-dev.json
+            const devLinkHash = hash; // Use full hash as cache key
+            let data = null;
 
-            // Check cache first
-            if (appState.detailsCache.developer[devLink]) {
-                renderDetailsView(appState.detailsCache.developer[devLink], 'developer');
-            } else {
-                const data = await fetchData(`${baseUrl}${devLink}`);
-                if (data) {
-                    appState.detailsCache.developer[devLink] = data; // Cache the data
-                    renderDetailsView(data, 'developer');
-                } else {
-                     hideLoading(); // Stop loading indicator on error
-                      // Error already shown by fetchData in details container
-                }
-            }
+             // Check cache first
+             if (appState.detailsCache.developer[devLinkHash]) {
+                 // console.log('Routing: Using cached Dev data for', devLinkHash);
+                 data = appState.detailsCache.developer[devLinkHash];
+             } else {
+                 const apiUrl = `${baseUrl}${hash.substring(2)}`;
+                 // console.log('Routing: Fetching Dev data for', apiUrl);
+                 data = await fetchData(apiUrl);
+                 if (data) {
+                     appState.detailsCache.developer[devLinkHash] = data; // Cache the data
+                 }
+             }
+
+             if (data) {
+                 renderDetailsView(data, 'developer');
+             } else {
+                  hideLoading();
+                  detailsContainer.style.display = 'block'; // Ensure details view is visible for error message
+                  vnDetailsContainer.innerHTML = `<p style="color: red;">Error loading developer details.</p>`;
+             }
         }
         // Fallback for unknown hashes
         else {
             console.warn(`Unknown hash route: ${hash}`);
              appState.currentPageType = 'index'; // Default to index
              window.location.hash = '#/'; // Redirect to index
-             // handleRouteChange will be triggered again by the hash change
+             // handleRouteChange will be triggered again by the hash change (unless already '#/')
+             // If it was already '#/', need to manually trigger if not loading
+             if (!appState.isLoading) {
+                hideLoading(); // Ensure loading is hidden
+                handleRouteChange(); // Re-trigger for '/' if needed
+             }
         }
     }
 
@@ -392,42 +514,5 @@
 
     // Handle initial page load
     document.addEventListener('DOMContentLoaded', () => {
-        handleRouteChange(); // Trigger routing based on initial URL hash
-
-        // Note: Search is not integrated with state/routing here.
-        // It will only filter the currently visible list on the index page.
-        const searchBar = document.getElementById('search-bar');
-        searchBar.addEventListener('input', (e) => {
-             if (appState.currentPageType === 'index') { // Only filter if on index page
-                 const searchTerm = e.target.value.toLowerCase();
-                 const resultsContainer = document.getElementById('search-results'); // Assuming you want to show results separately or filter list
-                 const allVnItems = vnListContainer.querySelectorAll('.vn-container');
-
-                 // Simple filter implementation (hides non-matching items)
-                 let matchFound = false;
-                 allVnItems.forEach(item => {
-                     const title = item.querySelector('.vn-title a')?.textContent.toLowerCase() || '';
-                     const description = item.querySelector('.vn-description')?.textContent.toLowerCase() || '';
-                     if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                         item.style.display = '';
-                         matchFound = true;
-                     } else {
-                         item.style.display = 'none';
-                     }
-                 });
-
-                 // Optional: Show message if no results found by search
-                 // resultsContainer.innerHTML = !matchFound && searchTerm ? '<p>No matching visual novels found.</p>' : '';
-             }
-        });
-    });
-
-    // No need for specific back-to-index listener, it's just a link now.
-    // Event listeners for dynamically created links (like VN titles, pagination, developer links)
-    // are handled implicitly because they now just change the hash, triggering 'hashchange'.
-
-  </script>
-  <!-- <script src="/page/src/search.js"></script> --> <!-- Removed separate search script as basic filtering is included -->
-
-</body>
-</html>
+        setupPreloadObserver(); // Initialize the IntersectionObserver
+        handleRouteChang
