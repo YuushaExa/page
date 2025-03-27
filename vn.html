@@ -5,9 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
-  <meta property="og:title" content="Visual Novels">
-  <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
-  <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
+  <!-- OG Meta Tags Removed -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -146,10 +144,7 @@
             posts: [],
             pagination: {}
         },
-        detailsCache: { // Cache for VN and Developer details
-            vn: {},
-            developer: {}
-        },
+        // Removed detailsCache
         currentDetail: null // Holds the data for the currently viewed detail page
     };
 
@@ -184,7 +179,10 @@
         } catch (error) {
             console.error('Error fetching data:', error);
             vnDetailsContainer.innerHTML = `<p style="color: red;">Error loading data: ${error.message}</p>`; // Show error in details view for now
-            showDetailsView(); // Switch to details view to show error
+            // Attempt to show details view even on error to display the message
+            hideLoading(); // Hide loading indicator
+            indexContainer.style.display = 'none';
+            detailsContainer.style.display = 'block'; // Ensure details container is visible for error message
             return null; // Indicate failure
         }
     }
@@ -196,7 +194,7 @@
         indexContainer.style.display = 'block';
         detailsContainer.style.display = 'none';
         pageTitle.textContent = 'Visual Novels';
-        resetOpenGraphMetaTags(); // Reset OG tags for index
+        // Removed resetOpenGraphMetaTags call
 
         vnListContainer.innerHTML = appState.index.posts.map(post => `
             <div class="vn-container">
@@ -227,7 +225,7 @@
         detailsContainer.style.display = 'block';
         pageTitle.textContent = data.title || data.name || 'Details'; // Use title or name
         appState.currentDetail = data; // Store current detail data in state
-        updateOpenGraphMetaTags(data); // Update OG tags
+        // Removed updateOpenGraphMetaTags call
 
         let content = '';
         if (type === 'vn') {
@@ -284,37 +282,7 @@
         vnDetailsContainer.innerHTML = content;
     }
 
-     // --- Open Graph Meta Tag Updates ---
-    function updateOpenGraphMetaTags(data) {
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogDescription = document.querySelector('meta[property="og:description"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-
-        const title = data.title || data.name || 'Visual Novels';
-        const description = data.description || 'No description available.';
-        const imageUrl = data.image?.url;
-
-        if (ogTitle) ogTitle.setAttribute('content', title);
-        if (ogDescription) ogDescription.setAttribute('content', description);
-        // Only update image if one exists, otherwise keep default/previous
-        if (ogImage && imageUrl) {
-            ogImage.setAttribute('content', imageUrl);
-        } else if (ogImage) {
-            // Optionally reset to default if no image
-             ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
-        }
-    }
-
-    function resetOpenGraphMetaTags() {
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogDescription = document.querySelector('meta[property="og:description"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-
-        if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
-        if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
-        if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
-    }
-
+     // --- Open Graph Meta Tag Updates Functions Removed ---
 
     // --- Routing Logic ---
     async function handleRouteChange() {
@@ -345,18 +313,15 @@
             appState.currentPageType = 'vnDetail';
             const vnLink = hash.substring(2); // e.g., vn/posts/some-post.json
 
-            // Check cache first
-            if (appState.detailsCache.vn[vnLink]) {
-                renderDetailsView(appState.detailsCache.vn[vnLink], 'vn');
+            // Removed cache check - Always fetch
+            const data = await fetchData(`${baseUrl}${vnLink}`);
+            if (data) {
+                // Removed caching step
+                renderDetailsView(data, 'vn');
             } else {
-                const data = await fetchData(`${baseUrl}${vnLink}`);
-                if (data) {
-                    appState.detailsCache.vn[vnLink] = data; // Cache the data
-                    renderDetailsView(data, 'vn');
-                } else {
-                     hideLoading(); // Stop loading indicator on error
-                     // Error already shown by fetchData in details container
-                }
+                 // Error is handled within fetchData, no need to hide loading again here if fetchData showed the error view
+                 // hideLoading(); // Stop loading indicator on error
+                 // Error already shown by fetchData in details container
             }
         }
         // Developer Detail Route
@@ -364,18 +329,15 @@
             appState.currentPageType = 'developerDetail';
             const devLink = hash.substring(2); // e.g., vn/developers/some-dev.json
 
-            // Check cache first
-            if (appState.detailsCache.developer[devLink]) {
-                renderDetailsView(appState.detailsCache.developer[devLink], 'developer');
+            // Removed cache check - Always fetch
+            const data = await fetchData(`${baseUrl}${devLink}`);
+            if (data) {
+                // Removed caching step
+                renderDetailsView(data, 'developer');
             } else {
-                const data = await fetchData(`${baseUrl}${devLink}`);
-                if (data) {
-                    appState.detailsCache.developer[devLink] = data; // Cache the data
-                    renderDetailsView(data, 'developer');
-                } else {
-                     hideLoading(); // Stop loading indicator on error
-                      // Error already shown by fetchData in details container
-                }
+                 // Error is handled within fetchData, no need to hide loading again here if fetchData showed the error view
+                 // hideLoading(); // Stop loading indicator on error
+                 // Error already shown by fetchData in details container
             }
         }
         // Fallback for unknown hashes
@@ -419,7 +381,7 @@
                  });
 
                  // Optional: Show message if no results found by search
-                 // resultsContainer.innerHTML = !matchFound && searchTerm ? '<p>No matching visual novels found.</p>' : '';
+                 resultsContainer.innerHTML = !matchFound && searchTerm ? '<p>No matching visual novels found.</p>' : '';
              }
         });
     });
@@ -433,4 +395,4 @@
   <!-- <script src="/page/src/search.js"></script> --> <!-- Removed separate search script as basic filtering is included -->
 
 </body>
-</html> 
+</html>
