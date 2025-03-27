@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
     };
   };
 
@@ -24,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     searchResults.innerHTML = ''; // Clear previous results
 
     if (query.length >= 3) {
-
       try {
         // Tokenize the query into individual words
         const tokens = tokenize(query);
@@ -38,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch the JSON file for the prefix
             const response = await fetch(filePath);
             if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
-
             const searchData = await response.json();
 
             // Find matching words for the token
@@ -64,27 +64,20 @@ document.addEventListener('DOMContentLoaded', () => {
             resultItem.textContent = `ID: ${id}`;
             searchResults.appendChild(resultItem);
           });
-
         } else {
           // No results found
           searchResults.textContent = 'No results found.';
-
         }
       } catch (error) {
         console.error('Error fetching search index:', error);
         searchResults.textContent = 'No results found.';
-
-
       }
     } else if (query.length > 0 && query.length < 3) {
       // Inform the user to type at least 3 characters
       searchResults.textContent = 'Please type at least 3 characters to search.';
-
-
     } else {
       // Clear results when the input is empty
       searchResults.textContent = '';
-
     }
   };
 
@@ -93,5 +86,4 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = e.target.value.trim(); // Get the search query
     handleSearch(query);
   }, 300)); // 300ms debounce delay
-
 });
