@@ -8,7 +8,7 @@
   <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
   <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
   <style>
-    /* --- Keep all your existing CSS from Code 1 --- */
+    /* --- Keep all your existing CSS --- */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -70,20 +70,19 @@
     }
     .vn-screenshots img {
       max-width: 100px;
-      height: auto; /* Maintain aspect ratio */
+      height: auto;
       margin-right: 10px;
-      border: 1px solid #eee; /* Optional: add border */
-      vertical-align: middle; /* Align nicely if text is next to them */
+      border: 1px solid #eee;
+      vertical-align: middle;
     }
-    /* Adjust screenshot list item display */
     .vn-screenshots li {
-       display: inline-block; /* Keep screenshots inline */
-       margin-bottom: 5px; /* Add some space below if they wrap */
+       display: inline-block;
+       margin-bottom: 5px;
     }
     #details-container {
-      display: none; /* Hide details by default */
+      display: none;
     }
-    #back-to-index { /* Keep styling consistent */
+    #back-to-index {
         display: inline-block;
         margin-top: 20px;
         text-decoration: none;
@@ -98,16 +97,25 @@
       height: auto;
       margin-left: 10px;
     }
-     .loading-indicator { /* Add a basic loading indicator */
+     .loading-indicator {
         text-align: center;
         padding: 20px;
         font-style: italic;
         color: #888;
-        display: none; /* Hide by default */
+        display: none;
+    }
+    /* Style for search results container */
+    #search-results {
+        margin-top: 10px;
+        border-top: 1px dashed #ccc; /* Optional: visual separator */
+        padding-top: 10px;
+    }
+    #search-results div { /* Basic styling for result items */
+        padding: 5px 0;
     }
   </style>
 </head>
-<body> <!-- Body tag was missing in provided snippet -->
+<body>
   <header>
     <h1 id="page-title">Visual Novels</h1>
     <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
@@ -116,15 +124,19 @@
 <main>
   <div class="loading-indicator" id="loading">Loading...</div>
 
+  <!-- Search results will be populated here by search.js -->
+  <div id="search-results" style="margin-top: 10px;"></div>
+
+  <!-- Index container (VN list and pagination) -->
   <section id="index-container">
-    <div id="search-results" style="margin-top: 10px;"></div>
     <div id="vn-list"></div>
     <div id="pagination" class="pagination"></div>
   </section>
 
-  <section id="details-container"> <!-- Removed vn-container class, added it to vn-details -->
-    <article id="vn-details" class="vn-container"></article> <!-- Apply container style here -->
-    <a href="#" id="back-to-index">Back to List</a> <!-- Changed href to # -->
+  <!-- Details container -->
+  <section id="details-container">
+    <article id="vn-details" class="vn-container"></article>
+    <a href="#" id="back-to-index">Back to List</a>
   </section>
 </main>
 
@@ -133,16 +145,20 @@
   </footer>
 
   <script>
+    // --- Keep the main script from the previous version ---
+    // --- BUT REMOVE the applySearchFilter function ---
+    // --- AND REMOVE searchBar.addEventListener('input', applySearchFilter); ---
+
     const baseUrl = 'https://yuushaexa.github.io/headless/';
-    const hobby = 'vn';
+    const hobby = 'vn'; // Ensure this is globally accessible for search.js
 
     // UI Elements
     const loadingIndicator = document.getElementById('loading');
-    const indexContainer = document.getElementById('index-container');
+    const indexContainer = document.getElementById('index-container'); // Keep reference
     const detailsContainer = document.getElementById('details-container');
-    const vnList = document.getElementById('vn-list');
-    const paginationContainer = document.getElementById('pagination');
-    const vnDetailsElement = document.getElementById('vn-details'); // Corrected ID reference
+    const vnList = document.getElementById('vn-list'); // Keep reference
+    const paginationContainer = document.getElementById('pagination'); // Keep reference
+    const vnDetailsElement = document.getElementById('vn-details');
     const pageTitle = document.getElementById('page-title');
 
     // --- Loading Indicator ---
@@ -156,8 +172,7 @@
         loadingIndicator.style.display = 'none';
     }
 
-    // --- Fetch Functions (Modified slightly to fit routing) ---
-
+    // --- Fetch Functions (Keep as they were) ---
     async function fetchAndDisplayIndex(apiUrl) {
       showLoading();
       try {
@@ -166,7 +181,7 @@
         const data = await response.json();
         renderVisualNovels(data.posts);
         renderPagination(data.pagination);
-        showIndexPage(); // Show the correct container
+        showIndexPage();
       } catch (error) {
         console.error('Error fetching visual novels:', error);
         displayError(`Failed to load visual novels list: ${error.message}`);
@@ -176,13 +191,14 @@
     }
 
     async function fetchAndDisplayVNDetails(apiUrl) {
+        // ... (keep this function as is)
       showLoading();
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`Network response was not ok for ${apiUrl}`);
         const vnDetails = await response.json();
         renderDetails(vnDetails);
-        showDetailsPage(); // Show the correct container
+        showDetailsPage();
       } catch (error) {
         console.error('Error fetching visual novel details:', error);
         displayError(`Failed to load visual novel details: ${error.message}`);
@@ -192,13 +208,14 @@
     }
 
      async function fetchAndDisplayDeveloperDetails(apiUrl) {
+        // ... (keep this function as is)
       showLoading();
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`Network response was not ok for ${apiUrl}`);
         const developerDetails = await response.json();
         renderDeveloperDetails(developerDetails);
-        showDetailsPage(); // Show the correct container
+        showDetailsPage();
       } catch (error) {
         console.error('Error fetching developer details:', error);
          displayError(`Failed to load developer details: ${error.message}`);
@@ -207,8 +224,7 @@
       }
     }
 
-    // --- Render Functions (Modified link hrefs) ---
-
+    // --- Render Functions (Keep as they were, ensure hrefs use #) ---
     function renderVisualNovels(posts) {
       vnList.innerHTML = posts.map(post => `
         <div class="vn-container">
@@ -219,11 +235,11 @@
           ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         </div>
       `).join('');
-       // Search needs to be re-applied if filtering is active
-       applySearchFilter();
+       // REMOVED applySearchFilter() call from here
     }
 
     function renderPagination(pagination) {
+       // ... (keep this function as is, ensure hrefs use #)
       paginationContainer.innerHTML = `
         ${pagination.previousPage ? `<a href="#/page/${pagination.previousPage}">Previous</a>` : '<span>Previous</span>'}
         <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
@@ -232,7 +248,7 @@
     }
 
     function renderDetails(post) {
-      // Using template literals for cleaner HTML generation
+        // ... (keep this function as is, ensure hrefs use #)
       vnDetailsElement.innerHTML = `
         <div class="vn-title">${post.title}</div>
         <div class="vn-description">${post.description || 'No description.'}</div>
@@ -265,10 +281,11 @@
         ` : ''}
       `;
       updateOpenGraphMetaTags(post);
-      pageTitle.textContent = post.title || 'Details'; // Update page title
+      pageTitle.textContent = post.title || 'Details';
     }
 
     function renderDeveloperDetails(developer) {
+       // ... (keep this function as is, ensure hrefs use #)
       vnDetailsElement.innerHTML = `
         <div class="vn-title">${developer.name}</div>
         <div class="vn-description">${developer.description || 'No description available.'}</div>
@@ -288,16 +305,16 @@
           </div>
         ` : ''}
       `;
-      updateOpenGraphMetaTags(developer); // Update OG tags for developer
-      pageTitle.textContent = developer.name || 'Developer Details'; // Update page title
+      updateOpenGraphMetaTags(developer);
+      pageTitle.textContent = developer.name || 'Developer Details';
     }
 
-
     function updateOpenGraphMetaTags(data) {
+        // ... (keep this function as is)
       const ogTitle = document.querySelector('meta[property="og:title"]');
       const ogDescription = document.querySelector('meta[property="og:description"]');
       const ogImage = document.querySelector('meta[property="og:image"]');
-      const defaultOgImage = 'https://example.com/default-visual-novel-image.jpg'; // Store default
+      const defaultOgImage = 'https://example.com/default-visual-novel-image.jpg';
 
       if (ogTitle) ogTitle.setAttribute('content', data?.title || data?.name || 'Visual Novels');
       if (ogDescription) ogDescription.setAttribute('content', data?.description || 'Explore the collection.');
@@ -305,120 +322,94 @@
     }
 
     function resetOpenGraphMetaTags() {
-        updateOpenGraphMetaTags(null); // Call with null to reset to defaults
+        // ... (keep this function as is)
+        updateOpenGraphMetaTags(null);
     }
 
 
-    // --- View Switching ---
+    // --- View Switching (Keep as they were) ---
     function showIndexPage() {
       indexContainer.style.display = 'block';
       detailsContainer.style.display = 'none';
       pageTitle.textContent = 'Visual Novels';
-      resetOpenGraphMetaTags(); // Reset OG tags when going to index
+      resetOpenGraphMetaTags();
+      // Let search.js control visibility based on search results
+      // const searchResults = document.getElementById('search-results');
+      // indexContainer.style.display = searchResults.innerHTML.trim() === '' ? 'block' : 'none';
     }
 
     function showDetailsPage() {
       indexContainer.style.display = 'none';
       detailsContainer.style.display = 'block';
       // Title is set within renderDetails/renderDeveloperDetails
+       document.getElementById('search-results').innerHTML = ''; // Clear search results when showing details
+       document.getElementById('search-bar').value = ''; // Clear search bar text
     }
 
      function displayError(message) {
-        hideLoading(); // Ensure loading is hidden
-        indexContainer.style.display = 'none'; // Hide main content areas
+        // ... (keep this function as is)
+        hideLoading();
+        indexContainer.style.display = 'none';
         detailsContainer.style.display = 'none';
-        // Optionally, display the error in a dedicated element or just alert
         vnDetailsElement.innerHTML = `<p style="color: red; text-align: center;">${message}</p>`;
         showDetailsPage(); // Show the details container to display the error
         pageTitle.textContent = 'Error';
+        document.getElementById('search-results').innerHTML = ''; // Also clear search results on error
      }
 
 
-    // --- Routing Logic ---
+    // --- Routing Logic (Keep as it was) ---
     function handleRouteChange() {
-      const hash = window.location.hash || '#'; // Default to '#'
-
-      // Extract path after #, removing leading '/' if present
+      const hash = window.location.hash || '#';
       const path = hash.substring(1).startsWith('/') ? hash.substring(2) : hash.substring(1);
 
-      // Index Route (default or paginated)
+      // Clear search results and input when route changes *unless* it's a pagination link
+       if (!path.startsWith('page/')) {
+           document.getElementById('search-results').innerHTML = '';
+           document.getElementById('search-bar').value = '';
+           // Ensure index is visible when navigating away from search/details
+           if (!path || path.startsWith('page/')) {
+                indexContainer.style.display = 'block';
+           }
+       }
+
       if (!path || path.startsWith('page/')) {
-        const indexPage = path ? path.substring(5) : `${hobby}/posts/index.json`; // Get page path or default
-         // Construct full URL carefully
+        const indexPage = path ? path.substring(5) : `${hobby}/posts/index.json`;
          const apiUrl = path.startsWith('page/') ? `${baseUrl}${indexPage}` : `${baseUrl}${hobby}/posts/index.json`;
         fetchAndDisplayIndex(apiUrl);
       }
-      // VN Detail Route
       else if (path.startsWith(`${hobby}/posts/`)) {
         const apiUrl = `${baseUrl}${path}`;
         fetchAndDisplayVNDetails(apiUrl);
       }
-       // Developer Detail Route
       else if (path.startsWith(`${hobby}/developers/`)) {
         const apiUrl = `${baseUrl}${path}`;
         fetchAndDisplayDeveloperDetails(apiUrl);
       }
-      // Fallback for unknown hashes (optional: redirect or show error)
       else {
         console.warn(`Unknown route: ${hash}`);
-        // Redirect to index as a safe default
         window.location.hash = '#';
-        // Or display a 'Not Found' message
-        // displayError('Page not found.');
       }
     }
-
-    // --- Search ---
-    const searchBar = document.getElementById('search-bar');
-    const searchResults = document.getElementById('search-results');
-
-    function applySearchFilter() {
-        // Only filter if we are on the index page
-        if (indexContainer.style.display !== 'block') return;
-
-        const searchTerm = searchBar.value.toLowerCase();
-        const allVnItems = vnList.querySelectorAll('.vn-container');
-        let matchFound = false;
-
-        allVnItems.forEach(item => {
-            const title = item.querySelector('.vn-title a')?.textContent.toLowerCase() || '';
-            const description = item.querySelector('.vn-description')?.textContent.toLowerCase() || '';
-            if (!searchTerm || title.includes(searchTerm) || description.includes(searchTerm)) {
-                item.style.display = ''; // Show if matches or search is empty
-                if (searchTerm) matchFound = true; // Found a match for a non-empty search
-            } else {
-                item.style.display = 'none'; // Hide if no match
-            }
-        });
-
-        // Display "no results" only if a search term was entered and nothing matched
-        searchResults.innerHTML = searchTerm && !matchFound ? '<p>No matching visual novels found.</p>' : '';
-
-         // Hide pagination if search yields results (or show if search is cleared) - Optional
-        paginationContainer.style.display = searchTerm ? 'none' : 'block';
-    }
-
-    searchBar.addEventListener('input', applySearchFilter);
 
     // --- Event Listeners ---
     window.addEventListener('hashchange', handleRouteChange);
 
-    // Back button listener (now just changes hash)
     document.getElementById('back-to-index').addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent default anchor behavior
-      window.location.hash = '#'; // Navigate to index hash
+      e.preventDefault();
+      window.location.hash = '#';
     });
 
     // Initial Load
     document.addEventListener('DOMContentLoaded', () => {
-      handleRouteChange(); // Handle the initial route based on the URL hash
-      // No need for initial fetchVisualNovels here, router handles it.
+      handleRouteChange();
     });
 
-    // Removed external search script link
 
   </script>
-  <!-- <script src="/page/src/search.js"></script> Removed -->
+
+  <!-- Load the external search script AFTER the main script -->
+  <script src="/page/src/search.js"></script>
 
 </body>
 </html>
