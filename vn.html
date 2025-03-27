@@ -163,7 +163,6 @@
           fetchVisualNovels(`${baseUrl}/${page}`);
         });
       });
-
     }
 
     // Fetch and render details for a specific visual novel
@@ -212,6 +211,10 @@ function renderDetails(post) {
 
    updateOpenGraphMetaTags(post);
 
+
+
+
+
   // Attach event listeners to developer links AFTER rendering
   document.querySelectorAll('.vn-developers a').forEach(link => {
     link.addEventListener('click', (e) => {
@@ -222,14 +225,36 @@ function renderDetails(post) {
   });
 }
 
+
+
+
+
+
+
+
+
 function updateOpenGraphMetaTags(post) {
   const ogTitle = document.querySelector('meta[property="og:title"]');
   const ogDescription = document.querySelector('meta[property="og:description"]');
   const ogImage = document.querySelector('meta[property="og:image"]');
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (ogTitle) ogTitle.setAttribute('content', post.title || 'Visual Novels');
   if (ogDescription) ogDescription.setAttribute('content', post.description || 'No description available.');
   if (ogImage && post.image?.url) ogImage.setAttribute('content', post.image.url);
+
 }
 
     // Fetch and render details for a specific developer
@@ -242,9 +267,7 @@ function updateOpenGraphMetaTags(post) {
         showDetailsPage();
       } catch (error) {
         console.error('Error fetching developer details:', error);
-
       }
-
     }
 
     // Render developer details into the template
@@ -266,6 +289,8 @@ function renderDeveloperDetails(developer) {
           ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         </div>                   
         `).join('')}
+
+
       </div>
     ` : ''}
   `;
@@ -281,6 +306,15 @@ function renderDeveloperDetails(developer) {
       fetchAndRenderDetails(vnLink);
     });
   });
+
+
+
+
+
+
+
+
+
 }
 
     // Show the index page
@@ -289,27 +323,122 @@ function showIndexPage() {
   document.getElementById('details-container').style.display = 'none';
   document.getElementById('page-title').textContent = 'Visual Novels';
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // Reset Open Graph meta tags to default values
   const ogTitle = document.querySelector('meta[property="og:title"]');
   const ogDescription = document.querySelector('meta[property="og:description"]');
   const ogImage = document.querySelector('meta[property="og:image"]');
 
+
+
+
+
+
+
+
+
+
+
   if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
   if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
   if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
+
+
+
+
+
+
+
 }
 
     // Show the details page
-
     function showDetailsPage() {
       document.getElementById('index-container').style.display = 'none';
       document.getElementById('details-container').style.display = 'block';
       document.getElementById('page-title').textContent = 'Details';
-
     }
 
     // Back to index page
     document.getElementById('back-to-index').addEventListener('click', (e) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       e.preventDefault();
       showIndexPage();
     });
@@ -317,11 +446,14 @@ function showIndexPage() {
     // Fetch initial data on page load
     document.addEventListener('DOMContentLoaded', () => {
       fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
-
     });
+
+
+
+
 
   </script>
     <script src="/page/src/search.js"></script>
-  
+
 </body>
 </html>
