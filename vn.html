@@ -190,7 +190,7 @@ function renderDetails(post) {
         <strong>Developers:</strong>
         <ul>${post.developers.map(post => `
           <li>
-            <a href="#" data-developer-link="vn/developers/${post.id}.json">${post.name}</a>
+            <a href="#" data-developer-link="vn/developers/${post.title}.json">${post.title}</a>
           </li>
         `).join('')}</ul>
       </div>
@@ -274,9 +274,9 @@ function updateOpenGraphMetaTags(post) {
 function renderDeveloperDetails(developer) {
   const detailsContainer = document.getElementById('vn-details');
   detailsContainer.innerHTML = `
-    <div class="vn-title">${developer.name}</div>
+    <div class="vn-title">${developer.title}</div>
     <div class="vn-description">${developer.description || 'No description available.'}</div>
-    ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.name}">` : ''}
+    ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
     ${developer.posts?.length ? `
       <div class="vn-posts">
         <strong>Visual Novels:</strong>
