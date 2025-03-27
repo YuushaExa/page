@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,6 +6,7 @@
   <title>Visual Novels</title>
   <!-- OG Meta Tags Removed -->
   <style>
+    /* ... (keep all your existing CSS) ... */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -106,26 +106,22 @@
 <body>
   <header>
     <h1 id="page-title">Visual Novels</h1>
-    <!-- Search bar kept for now, functionality might need adjustment -->
     <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
   </header>
 
   <main>
     <div class="loading-indicator" id="loading">Loading...</div>
 
-<section id="index-container">
-  <div id="search-results" style="margin-top: 10px;"></div>
-  <div id="vn-list"></div>
-  <div id="pagination" class="pagination"></div>
-</section>
+    <section id="index-container">
+      <div id="search-results" style="margin-top: 10px;"></div>
+      <div id="vn-list"></div>
+      <div id="pagination" class="pagination"></div>
+    </section>
 
-<section id="details-container">
-    <!-- Details will be rendered here -->
-     <div id="vn-details" class="vn-container"></div>
-     <!-- Changed Back link to use hash -->
-     <a href="#/" id="back-to-index">Back to List</a>
-</section>
-
+    <section id="details-container">
+         <div id="vn-details" class="vn-container"></div>
+         <a href="#/" id="back-to-index">Back to List</a>
+    </section>
   </main>
 
   <footer>
@@ -144,8 +140,7 @@
             posts: [],
             pagination: {}
         },
-        // Removed detailsCache
-        currentDetail: null // Holds the data for the currently viewed detail page
+        currentDetail: null
     };
 
     // --- UI Elements ---
@@ -178,14 +173,53 @@
             return await response.json();
         } catch (error) {
             console.error('Error fetching data:', error);
-            vnDetailsContainer.innerHTML = `<p style="color: red;">Error loading data: ${error.message}</p>`; // Show error in details view for now
-            // Attempt to show details view even on error to display the message
-            hideLoading(); // Hide loading indicator
-            indexContainer.style.display = 'none';
-            detailsContainer.style.display = 'block'; // Ensure details container is visible for error message
+            // Display error prominently if possible
+            hideLoading(); // Stop loading
+            pageTitle.textContent = "Error";
+            indexContainer.style.display = 'none'; // Hide index
+            detailsContainer.style.display = 'block'; // Show details area
+            vnDetailsContainer.innerHTML = `<p style="color: red;">Error loading data: ${error.message}</p>`;
             return null; // Indicate failure
         }
     }
+
+    // --- Prefetching Logic ---
+    const prefetchedUrls = new Set(); // Keep track of what we've already tried to prefetch
+
+    function prefetchJsonLinksOnPage() {
+        // Find all links currently rendered in the main content area
+        const links = document.querySelectorAll('#index-container a[href^="#/"], #details-container a[href^="#/"]');
+
+        links.forEach(link => {
+            const hashPath = link.getAttribute('href'); // e.g., #/vn/posts/foo.json or #/page/vn/posts/index-2.json
+
+            // Check if it's a hash link potentially pointing to a JSON file
+            if (hashPath.includes('.json')) {
+                // Extract the relative path part after '#/'
+                const relativePath = hashPath.substring(2); // e.g., vn/posts/foo.json or page/vn/posts/index-2.json
+
+                // Construct the full URL to the JSON file
+                const fullUrl = `${baseUrl}${relativePath}`;
+
+                // Only prefetch if we haven't already done so for this URL
+                if (!prefetchedUrls.has(fullUrl)) {
+                    try {
+                        const linkEl = document.createElement('link');
+                        linkEl.rel = 'prefetch';
+                        linkEl.href = fullUrl;
+                        linkEl.as = 'fetch'; // Important: Indicate we are fetching data
+                        linkEl.crossOrigin = "anonymous"; // May be needed depending on server CORS config for fetch/prefetch
+                        document.head.appendChild(linkEl);
+                        prefetchedUrls.add(fullUrl); // Mark as prefetched
+                        // console.log('Prefetching:', fullUrl); // Optional: for debugging
+                    } catch (e) {
+                        console.warn(`Could not initiate prefetch for ${fullUrl}`, e);
+                    }
+                }
+            }
+        });
+    }
+
 
     // --- Rendering Functions ---
 
@@ -194,12 +228,10 @@
         indexContainer.style.display = 'block';
         detailsContainer.style.display = 'none';
         pageTitle.textContent = 'Visual Novels';
-        // Removed resetOpenGraphMetaTags call
 
         vnListContainer.innerHTML = appState.index.posts.map(post => `
             <div class="vn-container">
                 <div class="vn-title">
-                    <!-- Use hash for links -->
                     <a href="#/${post.link}">${post.title}</a>
                 </div>
                 <div class="vn-description">${post.description || 'No description.'}</div>
@@ -213,19 +245,14 @@
             <span>Page ${pag.currentPage} of ${pag.totalPages}</span>
             ${pag.nextPage ? `<a href="#/page/${pag.nextPage}">Next</a>` : '<span>Next</span>'}
         `;
-
-        // Search functionality might need revisiting depending on requirements
-        // If search should filter current view, it's fine.
-        // If search should fetch results, it needs integration with routing/state.
     }
 
     function renderDetailsView(data, type) {
         hideLoading();
         indexContainer.style.display = 'none';
         detailsContainer.style.display = 'block';
-        pageTitle.textContent = data.title || data.name || 'Details'; // Use title or name
-        appState.currentDetail = data; // Store current detail data in state
-        // Removed updateOpenGraphMetaTags call
+        pageTitle.textContent = data.title || data.name || 'Details';
+        appState.currentDetail = data;
 
         let content = '';
         if (type === 'vn') {
@@ -238,8 +265,7 @@
                     <strong>Developers:</strong>
                     <ul>${data.developers.map(dev => `
                     <li>
-                        <!-- Use hash for developer links -->
-                        <a href="#/vn/developers/${dev.id}.json">${dev.name}</a>
+                        <a href="#/${hobby}/developers/${dev.id}.json">${dev.name}</a>
                     </li>
                     `).join('')}</ul>
                 </div>
@@ -268,7 +294,6 @@
                     ${data.posts.map(post => `
                     <div class="vn-container">
                         <div class="vn-title">
-                             <!-- Use hash for VN links -->
                             <a href="#/${post.link}">${post.title}</a>
                         </div>
                         <div class="vn-description">${post.description || 'No description.'}</div>
@@ -282,92 +307,94 @@
         vnDetailsContainer.innerHTML = content;
     }
 
-     // --- Open Graph Meta Tag Updates Functions Removed ---
 
     // --- Routing Logic ---
     async function handleRouteChange() {
-        if (appState.isLoading) return; // Prevent route changes while loading
+        if (appState.isLoading) return;
 
         const hash = window.location.hash || '#/';
         showLoading();
 
-        // Index Route (handles base and pagination)
-        if (hash === '#/' || hash.startsWith('#/page/')) {
-            appState.currentPageType = 'index';
-            const pagePath = hash.startsWith('#/page/') ? hash.substring(7) : `${hobby}/posts/index.json`;
-            const data = await fetchData(`${baseUrl}${pagePath}`);
-            if (data) {
-                appState.index.posts = data.posts;
-                appState.index.pagination = data.pagination;
-                renderIndexView();
-            } else {
-                // Handle fetch error - maybe show an error message on index
-                 hideLoading(); // Hide loading even if error
-                 indexContainer.style.display = 'block'; // Show index container
-                 vnListContainer.innerHTML = '<p style="color: red;">Could not load visual novels list.</p>';
-                 paginationContainer.innerHTML = '';
-            }
-        }
-        // VN Detail Route
-        else if (hash.startsWith(`#/${hobby}/posts/`)) {
-            appState.currentPageType = 'vnDetail';
-            const vnLink = hash.substring(2); // e.g., vn/posts/some-post.json
+        // Clear previous prefetches set when navigating,
+        // as the links on the page will change.
+        // Alternatively, keep the set global if you want to avoid re-prefetching
+        // across the entire session, but clearing on navigation makes sense
+        // to focus prefetching on the *current* view's links.
+        // prefetchedUrls.clear(); // Optional: Uncomment if you want to re-prefetch even if visited before in the session
 
-            // Removed cache check - Always fetch
-            const data = await fetchData(`${baseUrl}${vnLink}`);
-            if (data) {
-                // Removed caching step
-                renderDetailsView(data, 'vn');
-            } else {
-                 // Error is handled within fetchData, no need to hide loading again here if fetchData showed the error view
-                 // hideLoading(); // Stop loading indicator on error
-                 // Error already shown by fetchData in details container
+        try { // Added try block for better async error handling within route logic
+            // Index Route
+            if (hash === '#/' || hash.startsWith('#/page/')) {
+                appState.currentPageType = 'index';
+                const pagePath = hash.startsWith('#/page/') ? hash.substring(7) : `${hobby}/posts/index.json`;
+                const data = await fetchData(`${baseUrl}${pagePath}`);
+                if (data) {
+                    appState.index.posts = data.posts;
+                    appState.index.pagination = data.pagination;
+                    renderIndexView();
+                    prefetchJsonLinksOnPage(); // <<< PREFETCH AFTER RENDER
+                } else {
+                     // Error handled by fetchData, view is already updated
+                }
             }
-        }
-        // Developer Detail Route
-         else if (hash.startsWith(`#/${hobby}/developers/`)) { // Adjusted prefix based on generated links
-            appState.currentPageType = 'developerDetail';
-            const devLink = hash.substring(2); // e.g., vn/developers/some-dev.json
-
-            // Removed cache check - Always fetch
-            const data = await fetchData(`${baseUrl}${devLink}`);
-            if (data) {
-                // Removed caching step
-                renderDetailsView(data, 'developer');
-            } else {
-                 // Error is handled within fetchData, no need to hide loading again here if fetchData showed the error view
-                 // hideLoading(); // Stop loading indicator on error
-                 // Error already shown by fetchData in details container
+            // VN Detail Route
+            else if (hash.startsWith(`#/${hobby}/posts/`)) {
+                appState.currentPageType = 'vnDetail';
+                const vnLink = hash.substring(2);
+                const data = await fetchData(`${baseUrl}${vnLink}`);
+                if (data) {
+                    renderDetailsView(data, 'vn');
+                    prefetchJsonLinksOnPage(); // <<< PREFETCH AFTER RENDER
+                } else {
+                    // Error handled by fetchData
+                }
             }
-        }
-        // Fallback for unknown hashes
-        else {
-            console.warn(`Unknown hash route: ${hash}`);
-             appState.currentPageType = 'index'; // Default to index
-             window.location.hash = '#/'; // Redirect to index
-             // handleRouteChange will be triggered again by the hash change
+            // Developer Detail Route
+             else if (hash.startsWith(`#/${hobby}/developers/`)) {
+                appState.currentPageType = 'developerDetail';
+                const devLink = hash.substring(2);
+                const data = await fetchData(`${baseUrl}${devLink}`);
+                if (data) {
+                    renderDetailsView(data, 'developer');
+                    prefetchJsonLinksOnPage(); // <<< PREFETCH AFTER RENDER
+                } else {
+                    // Error handled by fetchData
+                }
+            }
+            // Fallback
+            else {
+                console.warn(`Unknown hash route: ${hash}`);
+                hideLoading(); // Hide loading for fallback
+                pageTitle.textContent = "Not Found";
+                indexContainer.style.display = 'none';
+                detailsContainer.style.display = 'block';
+                vnDetailsContainer.innerHTML = '<p>The requested page was not found.</p>';
+                // Optionally redirect to index:
+                // window.location.hash = '#/';
+            }
+        } catch (error) {
+             // Catch any unexpected errors during routing/rendering
+             console.error("Error during route handling:", error);
+             hideLoading();
+             pageTitle.textContent = "Error";
+             indexContainer.style.display = 'none';
+             detailsContainer.style.display = 'block';
+             vnDetailsContainer.innerHTML = `<p style="color: red;">An unexpected error occurred: ${error.message}</p>`;
         }
     }
 
     // --- Event Listeners ---
-
-    // Listen for hash changes (navigation)
     window.addEventListener('hashchange', handleRouteChange);
 
-    // Handle initial page load
     document.addEventListener('DOMContentLoaded', () => {
-        handleRouteChange(); // Trigger routing based on initial URL hash
+        handleRouteChange(); // Initial load
 
-        // Note: Search is not integrated with state/routing here.
-        // It will only filter the currently visible list on the index page.
         const searchBar = document.getElementById('search-bar');
         searchBar.addEventListener('input', (e) => {
-             if (appState.currentPageType === 'index') { // Only filter if on index page
+             if (appState.currentPageType === 'index') {
                  const searchTerm = e.target.value.toLowerCase();
-                 const resultsContainer = document.getElementById('search-results'); // Assuming you want to show results separately or filter list
+                 const resultsContainer = document.getElementById('search-results');
                  const allVnItems = vnListContainer.querySelectorAll('.vn-container');
-
-                 // Simple filter implementation (hides non-matching items)
                  let matchFound = false;
                  allVnItems.forEach(item => {
                      const title = item.querySelector('.vn-title a')?.textContent.toLowerCase() || '';
@@ -379,20 +406,14 @@
                          item.style.display = 'none';
                      }
                  });
-
-                 // Optional: Show message if no results found by search
                  resultsContainer.innerHTML = !matchFound && searchTerm ? '<p>No matching visual novels found.</p>' : '';
              }
         });
     });
 
-    // No need for specific back-to-index listener, it's just a link now.
-    // Event listeners for dynamically created links (like VN titles, pagination, developer links)
-    // are handled implicitly because they now just change the hash, triggering 'hashchange'.
-
-    let t,e,n,o,i,a=null,s=65,c=new Set;const r=1111;function d(t){o=performance.now();const e=t.target.closest("a");m(e)&&p(e.href,"high")}function u(t){if(performance.now()-o<r)return;if(!("closest"in t.target))return;const e=t.target.closest("a");m(e)&&(e.addEventListener("mouseout",f,{passive:!0}),i=setTimeout(()=>{p(e.href,"high"),i=void 0},s))}function l(t){const e=t.target.closest("a");m(e)&&p(e.href,"high")}function f(t){t.relatedTarget&&t.target.closest("a")==t.relatedTarget.closest("a")||i&&(clearTimeout(i),i=void 0)}function h(t){if(performance.now()-o<r)return;const e=t.target.closest("a");if(t.which>1||t.metaKey||t.ctrlKey)return;if(!e)return;e.addEventListener("click",function(t){1337!=t.detail&&t.preventDefault()},{capture:!0,passive:!1,once:!0});const n=new MouseEvent("click",{view:window,bubbles:!0,cancelable:!1,detail:1337});e.dispatchEvent(n)}function m(o){if(o&&o.href&&(!n||"instant"in o.dataset)){if(o.origin!=location.origin){if(!(e||"instant"in o.dataset)||!a)return}if(["http:","https:"].includes(o.protocol)&&("http:"!=o.protocol||"https:"!=location.protocol)&&(t||!o.search||"instant"in o.dataset)&&!(o.hash&&o.pathname+o.search==location.pathname+location.search||"noInstant"in o.dataset))return!0}}function p(t,e="auto"){if(c.has(t))return;const n=document.createElement("link");n.rel="prefetch",n.href=t,n.fetchPriority=e,n.as="document",document.head.appendChild(n),c.add(t)}!function(){if(!document.createElement("link").relList.supports("prefetch"))return;const o="instantVaryAccept"in document.body.dataset||"Shopify"in window,i=navigator.userAgent.indexOf("Chrome/");i>-1&&(a=parseInt(navigator.userAgent.substring(i+"Chrome/".length)));if(o&&a&&a<110)return;const c="instantMousedownShortcut"in document.body.dataset;t="instantAllowQueryString"in document.body.dataset,e="instantAllowExternalLinks"in document.body.dataset,n="instantWhitelist"in document.body.dataset;const r={capture:!0,passive:!0};let f=!1,v=!1,g=!1;if("instantIntensity"in document.body.dataset){const t=document.body.dataset.instantIntensity;if(t.startsWith("mousedown"))f=!0,"mousedown-only"==t&&(v=!0);else if(t.startsWith("viewport")){const e=navigator.connection&&navigator.connection.saveData,n=navigator.connection&&navigator.connection.effectiveType&&navigator.connection.effectiveType.includes("2g");e||n||("viewport"==t?document.documentElement.clientWidth*document.documentElement.clientHeight<45e4&&(g=!0):"viewport-all"==t&&(g=!0))}else{const e=parseInt(t);isNaN(e)||(s=e)}}v||document.addEventListener("touchstart",d,r);f?c||document.addEventListener("mousedown",l,r):document.addEventListener("mouseover",u,r);c&&document.addEventListener("mousedown",h,r);if(g){let t=window.requestIdleCallback;t||(t=(t=>{t()})),t(function(){const t=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){const n=e.target;t.unobserve(n),p(n.href)}})});document.querySelectorAll("a").forEach(e=>{m(e)&&t.observe(e)})},{timeout:1500})}}();
   </script>
-  <!-- <script src="/page/src/search.js"></script> --> <!-- Removed separate search script as basic filtering is included -->
+  <!-- Removed the instant.page script block -->
+  <!-- Removed separate search script comment -->
 
 </body>
 </html>
