@@ -300,7 +300,7 @@
     // page.base('/your-base-path'); // e.g., page.base('/my-spa')
 
     // Route for the index page (list of VNs)
-    page('/index.html', () => {
+    page('*', () => {
       console.log('Routing to index');
       showIndexPage();
       // Fetch the initial page of VNs
@@ -326,7 +326,7 @@
     });
 
     // Add a catch-all for routes not found (optional)
-    page('*', () => {
+    page('/', () => {
         console.log('Route not found');
         // You could show a 404 message
         showIndexPage(); // Or redirect to index
