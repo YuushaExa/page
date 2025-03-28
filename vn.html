@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
-    <meta property="og:title" content="Visual Novels">
-  <meta property="og:description" content="Explore a collection of visual novels with detailed descriptions, developers, and tags.">
-  <meta property="og:image" content="https://example.com/default-visual-novel-image.jpg">
+  <!-- Removed OG Meta Tags -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -179,83 +177,49 @@
     }
 
     // Render details into the template
-function renderDetails(post) {
-  const detailsContainer = document.getElementById('vn-details');
-  detailsContainer.innerHTML = `
-    <div class="vn-title">${post.title}</div>
-    <div class="vn-description">${post.description}</div>
-    ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-    ${post.developers?.length ? `
-      <div class="vn-developers">
-        <strong>Developers:</strong>
-        <ul>${post.developers.map(post => `
-          <li>
-            <a href="#" data-developer-link="vn/developers/${post.title}.json">${post.title}</a>
-          </li>
-        `).join('')}</ul>
-      </div>
-    ` : ''}
-    ${post.tags?.length ? `
-      <div class="vn-tags">
-        <strong>Tags:</strong>
-        <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
-      </div>
-    ` : ''}
-    ${post.screenshots?.length ? `
-      <div class="vn-screenshots">
-        <strong>Screenshots:</strong>
-        <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
-      </div>
-    ` : ''}
-  `;
+    function renderDetails(post) {
+      const detailsContainer = document.getElementById('vn-details');
+      detailsContainer.innerHTML = `
+        <div class="vn-title">${post.title}</div>
+        <div class="vn-description">${post.description}</div>
+        ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+        ${post.developers?.length ? `
+          <div class="vn-developers">
+            <strong>Developers:</strong>
+            <ul>${post.developers.map(post => `
+              <li>
+                <a href="#" data-developer-link="vn/developers/${dev.title}.json">${dev.title}</a>
+              </li>
+            `).join('')}</ul>
+          </div>
+        ` : ''}
+        ${post.tags?.length ? `
+          <div class="vn-tags">
+            <strong>Tags:</strong>
+            <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+        ${post.screenshots?.length ? `
+          <div class="vn-screenshots">
+            <strong>Screenshots:</strong>
+            <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
+          </div>
+        ` : ''}
+      `;
 
-   updateOpenGraphMetaTags(post);
+      // Removed call to updateOpenGraphMetaTags(post);
 
+      // Attach event listeners to developer links AFTER rendering
+      document.querySelectorAll('.vn-developers a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const developerLink = link.getAttribute('data-developer-link');
+          fetchAndRenderDeveloperDetails(developerLink);
+        });
+      });
+    }
 
-
-
-
-  // Attach event listeners to developer links AFTER rendering
-  document.querySelectorAll('.vn-developers a').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const developerLink = link.getAttribute('data-developer-link');
-      fetchAndRenderDeveloperDetails(developerLink);
-    });
-  });
-}
-
-
-
-
-
-
-
-
-
-function updateOpenGraphMetaTags(post) {
-  const ogTitle = document.querySelector('meta[property="og:title"]');
-  const ogDescription = document.querySelector('meta[property="og:description"]');
-  const ogImage = document.querySelector('meta[property="og:image"]');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  if (ogTitle) ogTitle.setAttribute('content', post.title || 'Visual Novels');
-  if (ogDescription) ogDescription.setAttribute('content', post.description || 'No description available.');
-  if (ogImage && post.image?.url) ogImage.setAttribute('content', post.image.url);
-
-}
+    // Removed updateOpenGraphMetaTags function
 
     // Fetch and render details for a specific developer
     async function fetchAndRenderDeveloperDetails(developerLink) {
@@ -271,112 +235,47 @@ function updateOpenGraphMetaTags(post) {
     }
 
     // Render developer details into the template
-function renderDeveloperDetails(developer) {
-  const detailsContainer = document.getElementById('vn-details');
-  detailsContainer.innerHTML = `
-    <div class="vn-title">${developer.title}</div>
-    <div class="vn-description">${developer.description || 'No description available.'}</div>
-    ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
-    ${developer.posts?.length ? `
-      <div class="vn-posts">
-        <strong>Visual Novels:</strong>
-        ${developer.posts.map(post => `
-  <div class="vn-container">
-          <div class="vn-title">
-            <a href="#" data-vn-link="${post.link}">${post.title}</a>
+    function renderDeveloperDetails(developer) {
+      const detailsContainer = document.getElementById('vn-details');
+      detailsContainer.innerHTML = `
+        <div class="vn-title">${developer.title}</div>
+        <div class="vn-description">${developer.description || 'No description available.'}</div>
+        ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
+        ${developer.posts?.length ? `
+          <div class="vn-posts">
+            <strong>Visual Novels:</strong>
+            ${developer.posts.map(post => `
+              <div class="vn-container">
+                <div class="vn-title">
+                  <a href="#" data-vn-link="${post.link}">${post.title}</a>
+                </div>
+                <div class="vn-description">${post.description}</div>
+                ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+              </div>
+            `).join('')}
           </div>
-          <div class="vn-description">${post.description}</div>
-          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-        </div>                   
-        `).join('')}
+        ` : ''}
+      `;
 
+      // Removed call to updateOpenGraphMetaTags(developer);
 
-      </div>
-    ` : ''}
-  `;
-
-  // Update Open Graph meta tags
-  updateOpenGraphMetaTags(developer);
-
-  // Re-attach event listeners to visual novel links
-  document.querySelectorAll('.vn-posts a').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const vnLink = e.target.closest('a').getAttribute('data-vn-link');
-      fetchAndRenderDetails(vnLink);
-    });
-  });
-
-
-
-
-
-
-
-
-
-}
+      // Re-attach event listeners to visual novel links
+      document.querySelectorAll('.vn-posts a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
+          fetchAndRenderDetails(vnLink);
+        });
+      });
+    }
 
     // Show the index page
-function showIndexPage() {
-  document.getElementById('index-container').style.display = 'block';
-  document.getElementById('details-container').style.display = 'none';
-  document.getElementById('page-title').textContent = 'Visual Novels';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Reset Open Graph meta tags to default values
-  const ogTitle = document.querySelector('meta[property="og:title"]');
-  const ogDescription = document.querySelector('meta[property="og:description"]');
-  const ogImage = document.querySelector('meta[property="og:image"]');
-
-
-
-
-
-
-
-
-
-
-
-  if (ogTitle) ogTitle.setAttribute('content', 'Visual Novels');
-  if (ogDescription) ogDescription.setAttribute('content', 'Explore a collection of visual novels with detailed descriptions, developers, and tags.');
-  if (ogImage) ogImage.setAttribute('content', 'https://example.com/default-visual-novel-image.jpg');
-
-
-
-
-
-
-
-}
+    function showIndexPage() {
+      document.getElementById('index-container').style.display = 'block';
+      document.getElementById('details-container').style.display = 'none';
+      document.getElementById('page-title').textContent = 'Visual Novels';
+      // Removed OG tag reset logic
+    }
 
     // Show the details page
     function showDetailsPage() {
@@ -387,58 +286,6 @@ function showIndexPage() {
 
     // Back to index page
     document.getElementById('back-to-index').addEventListener('click', (e) => {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       e.preventDefault();
       showIndexPage();
     });
@@ -448,12 +295,8 @@ function showIndexPage() {
       fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
     });
 
-
-
-
-
   </script>
-    <script src="/page/src/search.js"></script>
+  <script src="/page/src/search.js"></script>
 
 </body>
 </html>
