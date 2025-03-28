@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else if (query.length > 0 && query.length < 2) {
       // Inform the user to type at least 3 characters
-      searchResults.textContent = 'Please type at least 3 characters to search.';
+      searchResults.textContent = 'Please type at least 2 characters to search.';
     } else {
       // Clear results when the input is empty
       searchResults.textContent = '';
