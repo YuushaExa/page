@@ -4,41 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
-  <!-- Open Graph Meta Tags Removed -->
-
+  <!-- Removed OG Meta Tags -->
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      line-height: 1.6;
-    }
-    header, footer {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    footer {
-        margin-top: 30px;
-        font-size: 0.9em;
-        color: #666;
-    }
-    #search-bar {
-      width: 100%;
-      max-width: 600px; /* Limit search bar width */
-      padding: 10px;
-      margin-bottom: 20px;
-      box-sizing: border-box; /* Include padding in width */
-      border: 1px solid #ccc;
-      border-radius: 4px;
     }
     .vn-container {
       border: 1px solid #ddd;
       padding: 15px;
       margin-bottom: 20px;
       border-radius: 5px;
-      background-color: #fff;
     }
     .vn-title {
-      font-size: 1.5em; /* Use em for scalability */
+      font-size: 24px;
       font-weight: bold;
       margin-bottom: 10px;
     }
@@ -46,12 +25,11 @@
       text-decoration: none;
       color: #007bff;
     }
-    .vn-title a:hover,
-    #back-to-index:hover {
+    .vn-title a:hover {
       text-decoration: underline;
     }
     .vn-description {
-      font-size: 1em;
+      font-size: 16px;
       color: #555;
       margin-bottom: 10px;
     }
@@ -59,7 +37,6 @@
       max-width: 100%;
       height: auto;
       margin-bottom: 10px;
-      border-radius: 4px;
     }
     .pagination {
       margin-top: 20px;
@@ -67,451 +44,259 @@
     }
     .pagination a {
       margin: 0 5px;
-      padding: 5px 10px;
       text-decoration: none;
       color: #007bff;
-      border: 1px solid #ddd;
-      border-radius: 3px;
     }
-    .pagination a:hover {
-        background-color: #f0f0f0;
-        text-decoration: none;
+    .pagination a.active {
+      font-weight: bold;
+      color: #000;
     }
-    .pagination span {
-        margin: 0 10px;
-        color: #555;
-    }
-    .vn-developers, .vn-tags, .vn-screenshots, .vn-posts {
-      margin-top: 15px;
+    .vn-developers, .vn-tags, .vn-screenshots {
       margin-bottom: 10px;
     }
     .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
       list-style-type: none;
       padding: 0;
-      margin-top: 5px;
     }
     .vn-developers li, .vn-tags li {
       display: inline-block;
-      margin-right: 8px;
-      margin-bottom: 5px;
+      margin-right: 10px;
       background-color: #f0f0f0;
       padding: 5px 10px;
       border-radius: 3px;
-      font-size: 0.9em;
-    }
-     .vn-developers li a {
-        text-decoration: none;
-        color: #333;
-     }
-     .vn-developers li a:hover {
-        color: #007bff;
-        text-decoration: underline;
-     }
-    .vn-screenshots ul {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px; /* Add spacing between screenshots */
     }
     .vn-screenshots img {
-      max-width: 150px; /* Slightly larger screenshots */
-      height: auto;
-      border: 1px solid #eee;
-      border-radius: 3px;
+      max-width: 100px;
+      margin-right: 10px;
     }
     #details-container {
       display: none; /* Hide details by default */
     }
     #back-to-index {
-      display: inline-block; /* Better alignment */
+      display: block;
       margin-top: 20px;
       text-decoration: none;
       color: #007bff;
-      padding: 8px 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
     }
-    #back-to-index:hover {
-        background-color: #f0f0f0;
-    }
-    .error-message {
-        color: red;
-        font-weight: bold;
-        text-align: center;
-        padding: 20px;
-    }
-    /* Style for VN items listed under a developer */
-    .vn-posts .vn-container {
-        margin-left: 20px; /* Indent nested VNs */
-        border-left: 3px solid #007bff;
+    .vn-post-image {
+      max-width: 50px;
+      height: auto;
+      margin-left: 10px;
     }
   </style>
 </head>
-<body>
-
   <header>
-    <h1 id="page-title">Visual Novels</h1>
-    <input type="text" id="search-bar" placeholder="Search Visual Novels...">
-  </header>
-
-  <main>
-    <!-- Container for search results (if search.js populates it) -->
+  <h1 id="page-title">Visual Novels</h1>
+  <input type="text" id="search-bar" placeholder="Search Visual Novels..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
+</header>
+<body>
+<main>
+  <section id="index-container">
     <div id="search-results" style="margin-top: 10px;"></div>
-
-    <!-- Index Page Content -->
-    <section id="index-container">
-      <div id="vn-list">
-        <!-- Visual Novels will be loaded here -->
-        <p>Loading visual novels...</p>
-      </div>
-      <div id="pagination" class="pagination"></div>
-    </section>
-
-    <!-- Details Page Content -->
-    <section id="details-container">
-      <article id="vn-details" class="vn-container">
-        <!-- Details will be loaded here -->
-      </article>
-      <a href="#" id="back-to-index">« Back to List</a>
-    </section>
-  </main>
-
+    <div id="vn-list"></div>
+    <div id="pagination" class="pagination"></div>
+  </section>
+  <section id="details-container" class="vn-container">
+    <article id="vn-details"></article>
+    <a href="#" id="back-to-index">Back to List</a>
+  </section>
+</main>
   <footer>
-    © 2025 Your Name/Site
+2025
   </footer>
-
   <script>
-    // --- Configuration ---
     const baseUrl = 'https://yuushaexa.github.io/headless/';
     const hobby = 'vn';
-    // Removed defaultOgData constant
 
-    // --- DOM Elements ---
-    const vnListContainer = document.getElementById('vn-list');
-    const paginationContainer = document.getElementById('pagination');
-    const detailsContentContainer = document.getElementById('vn-details');
-    const indexContainer = document.getElementById('index-container');
-    const detailsContainer = document.getElementById('details-container');
-    const pageTitleElement = document.getElementById('page-title');
-    const backButton = document.getElementById('back-to-index');
-    // const searchBar = document.getElementById('search-bar');
-    // const searchResultsContainer = document.getElementById('search-results');
-
-    // --- API Helper ---
-    /**
-     * Fetches JSON data from a given URL.
-     * @param {string} url - The URL to fetch data from.
-     * @returns {Promise<object|null>} - The JSON data or null if an error occurred.
-     */
-    async function fetchJson(url) {
+    // Fetch and display visual novels
+    async function fetchVisualNovels(url) {
       try {
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status} for ${url}`);
-        }
-        return await response.json();
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        renderVisualNovels(data.posts);
+        renderPagination(data.pagination);
       } catch (error) {
-        console.error('Fetch error:', error);
-        return null; // Indicate failure
+        console.error('Error fetching visual novels:', error);
       }
     }
 
-    // --- Rendering Helpers ---
-
-    /**
-     * Renders a single visual novel item (used for lists).
-     * @param {object} post - The visual novel post object.
-     * @returns {string} - HTML string for the VN item.
-     */
-    function renderVnListItem(post) {
-      const imageUrl = post.image?.url ?? '';
-      const imageAlt = post.title || 'Visual Novel Image';
-      const description = post.description || 'No description available.';
-
-      return `
+    // Render visual novels into the template
+    function renderVisualNovels(posts) {
+      const vnList = document.getElementById('vn-list');
+      vnList.innerHTML = posts.map(post => `
         <div class="vn-container">
           <div class="vn-title">
             <a href="#" data-vn-link="${post.link}">${post.title}</a>
           </div>
-          <div class="vn-description">${description}</div>
-          ${imageUrl ? `<img class="vn-image" src="${imageUrl}" alt="${imageAlt}">` : ''}
+          <div class="vn-description">${post.description}</div>
+          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         </div>
-      `;
+      `).join('');
+
+      // Add event listeners to visual novel links
+      document.querySelectorAll('.vn-title a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const vnLink = e.target.getAttribute('data-vn-link');
+          fetchAndRenderDetails(vnLink);
+        });
+      });
     }
 
-    /**
-     * Renders the list of visual novels.
-     * @param {Array<object>} posts - Array of visual novel post objects.
-     */
-    function renderVisualNovels(posts) {
-      if (!posts) {
-        displayError('Failed to load visual novels. Please try again later.', vnListContainer);
-        return;
-      }
-      if (posts.length === 0) {
-        vnListContainer.innerHTML = '<p>No visual novels found.</p>';
-        return;
-      }
-      vnListContainer.innerHTML = posts.map(renderVnListItem).join('');
-      attachDynamicLinkListeners(vnListContainer, '.vn-title a', 'data-vn-link', handleVnLinkClick);
-    }
-
-    /**
-     * Renders pagination controls.
-     * @param {object} pagination - Pagination data (currentPage, totalPages, previousPage, nextPage).
-     */
+    // Render pagination
     function renderPagination(pagination) {
-      if (!pagination) {
-          paginationContainer.innerHTML = ''; // Clear if no pagination data
-          return;
-      }
-      let html = '';
-      if (pagination.previousPage) {
-        html += `<a href="#" data-page-url="${pagination.previousPage}">Previous</a>`;
-      }
-      html += `<span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>`;
-      if (pagination.nextPage) {
-        html += `<a href="#" data-page-url="${pagination.nextPage}">Next</a>`;
-      }
-      paginationContainer.innerHTML = html;
+      const paginationContainer = document.getElementById('pagination');
+      paginationContainer.innerHTML = `
+        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
+        <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
+        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
+      `;
 
-      // Add event listeners to new pagination links
-      attachDynamicLinkListeners(paginationContainer, 'a[data-page-url]', 'data-page-url', handlePaginationClick);
+      // Add event listeners to pagination links
+      document.querySelectorAll('#pagination a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = e.target.getAttribute('data-page');
+          fetchVisualNovels(`${baseUrl}/${page}`);
+        });
+      });
     }
 
-    /**
-     * Renders the details view for a visual novel.
-     * @param {object} post - The detailed visual novel post object.
-     */
-    function renderDetails(post) {
-      if (!post) {
-        displayError('Failed to load visual novel details.', detailsContentContainer);
-        return;
+    // Fetch and render details for a specific visual novel
+    async function fetchAndRenderDetails(vnLink) {
+      try {
+        const response = await fetch(`${baseUrl}${vnLink}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const vnDetails = await response.json();
+        renderDetails(vnDetails);
+        showDetailsPage();
+      } catch (error) {
+        console.error('Error fetching visual novel details:', error);
       }
+    }
 
-      const imageUrl = post.image?.url ?? '';
-      const imageAlt = post.title || 'Visual Novel Image';
-      const description = post.description || 'No description available.';
-
-      detailsContentContainer.innerHTML = `
+    // Render details into the template
+    function renderDetails(post) {
+      const detailsContainer = document.getElementById('vn-details');
+      detailsContainer.innerHTML = `
         <div class="vn-title">${post.title}</div>
-        <div class="vn-description">${description}</div>
-        ${imageUrl ? `<img class="vn-image" src="${imageUrl}" alt="${imageAlt}">` : ''}
-
+        <div class="vn-description">${post.description}</div>
+        ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         ${post.developers?.length ? `
           <div class="vn-developers">
             <strong>Developers:</strong>
-            <ul>${post.developers.map(dev => `
+            <ul>${post.developers.map(post => `
               <li>
-                <a href="#" data-developer-link="vn/developers/${dev.title}.json">${dev.title}</a>
-              </li>`).join('')}
-            </ul>
+                <a href="#" data-developer-link="vn/developers/${post.title}.json">${post.title}</a>
+              </li>
+            `).join('')}</ul>
           </div>
         ` : ''}
-
         ${post.tags?.length ? `
           <div class="vn-tags">
             <strong>Tags:</strong>
             <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
           </div>
         ` : ''}
-
         ${post.screenshots?.length ? `
           <div class="vn-screenshots">
             <strong>Screenshots:</strong>
-            <ul>${post.screenshots.map(ss => `<li><img src="${ss.url}" alt="Screenshot"></li>`).join('')}</ul>
+            <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
           </div>
         ` : ''}
       `;
-      // Removed updateOpenGraphMetaTags(post);
-      attachDynamicLinkListeners(detailsContentContainer, '.vn-developers a', 'data-developer-link', handleDeveloperLinkClick);
+
+      // Removed call to updateOpenGraphMetaTags(post);
+
+      // Attach event listeners to developer links AFTER rendering
+      document.querySelectorAll('.vn-developers a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const developerLink = link.getAttribute('data-developer-link');
+          fetchAndRenderDeveloperDetails(developerLink);
+        });
+      });
     }
 
-    /**
-     * Renders the details view for a developer.
-     * @param {object} developer - The developer details object.
-     */
-    function renderDeveloperDetails(developer) {
-       if (!developer) {
-        displayError('Failed to load developer details.', detailsContentContainer);
-        return;
+    // Removed updateOpenGraphMetaTags function
+
+    // Fetch and render details for a specific developer
+    async function fetchAndRenderDeveloperDetails(developerLink) {
+      try {
+        const response = await fetch(`${baseUrl}${developerLink}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const developerDetails = await response.json();
+        renderDeveloperDetails(developerDetails);
+        showDetailsPage();
+      } catch (error) {
+        console.error('Error fetching developer details:', error);
       }
+    }
 
-      const imageUrl = developer.image?.url ?? '';
-      const imageAlt = developer.title || 'Developer Image';
-      const description = developer.description || 'No description available.';
-
-      detailsContentContainer.innerHTML = `
+    // Render developer details into the template
+    function renderDeveloperDetails(developer) {
+      const detailsContainer = document.getElementById('vn-details');
+      detailsContainer.innerHTML = `
         <div class="vn-title">${developer.title}</div>
-        <div class="vn-description">${description}</div>
-        ${imageUrl ? `<img class="vn-image" src="${imageUrl}" alt="${imageAlt}">` : ''}
-
+        <div class="vn-description">${developer.description || 'No description available.'}</div>
+        ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
         ${developer.posts?.length ? `
           <div class="vn-posts">
             <strong>Visual Novels:</strong>
-            ${developer.posts.map(renderVnListItem).join('')}
+            ${developer.posts.map(post => `
+              <div class="vn-container">
+                <div class="vn-title">
+                  <a href="#" data-vn-link="${post.link}">${post.title}</a>
+                </div>
+                <div class="vn-description">${post.description}</div>
+                ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+              </div>
+            `).join('')}
           </div>
         ` : ''}
       `;
-      // Removed updateOpenGraphMetaTags(developer);
-      // Attach listeners to the VN links *within* the developer page
-      attachDynamicLinkListeners(detailsContentContainer, '.vn-posts .vn-title a', 'data-vn-link', handleVnLinkClick);
-    }
 
-    // Removed updateOpenGraphMetaTags function entirely
+      // Removed call to updateOpenGraphMetaTags(developer);
 
-    /**
-     * Displays an error message within a specified container.
-     * @param {string} message - The error message to display.
-     * @param {HTMLElement} container - The container element to display the message in.
-     */
-    function displayError(message, container) {
-        if (container) {
-            container.innerHTML = `<p class="error-message">${message}</p>`;
-        } else {
-            console.error("Error container not found for message:", message);
-            alert(message); // Fallback
-        }
-    }
-
-    // --- Page/View Management ---
-
-    function showIndexPage() {
-      indexContainer.style.display = 'block';
-      detailsContainer.style.display = 'none';
-      pageTitleElement.textContent = 'Visual Novels'; // Reset title directly
-      // Removed updateOpenGraphMetaTags();
-      window.scrollTo(0, 0); // Scroll to top
-    }
-
-    function showDetailsPage(title = 'Details') {
-      indexContainer.style.display = 'none';
-      detailsContainer.style.display = 'block';
-      pageTitleElement.textContent = title; // Use specific title if available
-      window.scrollTo(0, 0); // Scroll to top
-    }
-
-    // --- Data Fetching Logic ---
-
-    /** Fetches and displays the initial list or a specific page. */
-    async function fetchAndShowVisualNovels(relativeUrl) {
-      const data = await fetchJson(`${baseUrl}${relativeUrl}`);
-      if (data) {
-        renderVisualNovels(data.posts);
-        renderPagination(data.pagination);
-      } else {
-        // Error handled by renderVisualNovels if data is null
-        vnListContainer.innerHTML = ''; // Clear loading message
-        paginationContainer.innerHTML = ''; // Clear pagination
-        displayError('Could not load the list of visual novels.', vnListContainer);
-      }
-    }
-
-    /** Fetches and displays details for a specific VN. */
-    async function fetchAndShowDetails(relativeLink) {
-      detailsContentContainer.innerHTML = "<p>Loading details...</p>"; // Show loading state
-      showDetailsPage('Loading...');
-      const vnDetails = await fetchJson(`${baseUrl}${relativeLink}`);
-      if (vnDetails) {
-          renderDetails(vnDetails);
-          showDetailsPage(vnDetails.title); // Update title after loading
-      } else {
-          // Error handled by renderDetails if vnDetails is null
-           showDetailsPage('Error'); // Update title on error
-           displayError('Could not load details for this visual novel.', detailsContentContainer);
-      }
-    }
-
-    /** Fetches and displays details for a specific developer. */
-    async function fetchAndShowDeveloperDetails(relativeLink) {
-      detailsContentContainer.innerHTML = "<p>Loading developer info...</p>"; // Show loading state
-      showDetailsPage('Loading...');
-      const developerDetails = await fetchJson(`${baseUrl}${relativeLink}`);
-       if (developerDetails) {
-           renderDeveloperDetails(developerDetails);
-           showDetailsPage(developerDetails.title); // Update title after loading
-       } else {
-           // Error handled by renderDeveloperDetails if developerDetails is null
-           showDetailsPage('Error'); // Update title on error
-           displayError('Could not load details for this developer.', detailsContentContainer);
-       }
-    }
-
-    // --- Event Handlers ---
-
-    function handleVnLinkClick(event) {
-      event.preventDefault();
-      const link = event.target.closest('a');
-      if (!link) return;
-      const vnLink = link.getAttribute('data-vn-link');
-      if (vnLink) {
-        fetchAndShowDetails(vnLink);
-      }
-    }
-
-    function handleDeveloperLinkClick(event) {
-      event.preventDefault();
-      const link = event.target.closest('a');
-      if (!link) return;
-      const developerLink = link.getAttribute('data-developer-link');
-      if (developerLink) {
-        fetchAndShowDeveloperDetails(developerLink);
-      }
-    }
-
-    function handlePaginationClick(event) {
-      event.preventDefault();
-      const link = event.target.closest('a');
-      if (!link) return;
-      const pageUrl = link.getAttribute('data-page-url');
-      if (pageUrl) {
-        fetchAndShowVisualNovels(pageUrl);
-      }
-    }
-
-    function handleBackButtonClick(event) {
-      event.preventDefault();
-      showIndexPage();
-    }
-
-    /**
-     * Attaches event listeners using event delegation on a container.
-     * @param {HTMLElement} container - The parent element to attach the listener to.
-     * @param {string} selector - CSS selector for the target elements.
-     * @param {string} dataAttribute - The data attribute containing the link/data.
-     * @param {Function} handler - The event handler function.
-     */
-    function attachDynamicLinkListeners(container, selector, dataAttribute, handler) {
-        container.addEventListener('click', (event) => {
-            const targetElement = event.target.closest(selector);
-            if (targetElement && container.contains(targetElement)) {
-                if (targetElement.hasAttribute(dataAttribute)) {
-                    handler(event);
-                } else {
-                    console.warn(`Clicked element matching selector "${selector}" but missing attribute "${dataAttribute}"`);
-                }
-            }
+      // Re-attach event listeners to visual novel links
+      document.querySelectorAll('.vn-posts a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
+          fetchAndRenderDetails(vnLink);
         });
+      });
     }
 
-    // --- Initialization ---
+    // Show the index page
+    function showIndexPage() {
+      document.getElementById('index-container').style.display = 'block';
+      document.getElementById('details-container').style.display = 'none';
+      document.getElementById('page-title').textContent = 'Visual Novels';
+      // Removed OG tag reset logic
+    }
+
+    // Show the details page
+    function showDetailsPage() {
+      document.getElementById('index-container').style.display = 'none';
+      document.getElementById('details-container').style.display = 'block';
+      document.getElementById('page-title').textContent = 'Details';
+    }
+
+    // Back to index page
+    document.getElementById('back-to-index').addEventListener('click', (e) => {
+      e.preventDefault();
+      showIndexPage();
+    });
+
+    // Fetch initial data on page load
     document.addEventListener('DOMContentLoaded', () => {
-      // Initial data load
-      fetchAndShowVisualNovels(`${hobby}/posts/index.json`);
-
-      // Static event listeners
-      backButton.addEventListener('click', handleBackButtonClick);
-
-      // Dynamic listeners are attached via delegation within render functions
-
-      // Placeholder for search initialization
-      // if (typeof initializeSearch === 'function') {
-      //   initializeSearch();
-      // }
+      fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
     });
 
   </script>
-  <!-- Assuming search.js provides search functionality -->
-  <!-- <script src="/page/src/search.js"></script> -->
+  <script src="/page/src/search.js"></script>
 
 </body>
-  </html>
+</html>
