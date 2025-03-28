@@ -111,242 +111,244 @@
 </footer>
 
 <!-- Add Page.js library -->
-<script src="//unpkg.com/page/page.js"></script>
+ <script src="/page/src/mini-router.js"></script>
+  <script>
+    const baseUrl = 'https://yuushaexa.github.io/headless/';
+    const hobby = 'vn'; // Assuming 'vn' is the base for VNs
 
-<!-- Your custom script -->
-<script>
-  // ... (Keep your constants and fetch/render functions) ...
-  const baseUrl = 'https://yuushaexa.github.io/headless/';
-  const hobby = 'vn';
-
-  // --- DOM Elements ---
-  const indexContainer = document.getElementById('index-container');
-  const detailsContainer = document.getElementById('details-container');
-  const vnListContainer = document.getElementById('vn-list');
-  const paginationContainer = document.getElementById('pagination');
-  const vnDetailsArticle = document.getElementById('vn-details');
-  const pageTitleElement = document.getElementById('page-title');
-  const backToIndexLink = document.getElementById('back-to-index'); // We might not need event listener on this anymore
-
-  // --- View Switching Logic ---
-  function showIndexPage() {
-    indexContainer.style.display = 'block';
-    detailsContainer.style.display = 'none';
-    pageTitleElement.textContent = 'Visual Novels';
-    // Clear previous details to avoid showing stale content briefly
-    vnDetailsArticle.innerHTML = '';
-    // Removed OG tag reset logic
-  }
-
-  function showDetailsPage(title = 'Details') {
-    indexContainer.style.display = 'none';
-    detailsContainer.style.display = 'block';
-    pageTitleElement.textContent = title; // Update title based on content
-  }
-
-  // --- Data Fetching and Rendering Functions (Modified) ---
-
-  // Fetch and display visual novels (Index View)
-  async function fetchVisualNovels(url) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-      renderVisualNovels(data.posts);
-      renderPagination(data.pagination);
-      // Ensure index view is visible after fetching
-      // Note: This might be redundant if called from the index route handler
-      // showIndexPage();
-    } catch (error) {
-      console.error('Error fetching visual novels:', error);
-      vnListContainer.innerHTML = `<p>Error loading visual novels.</p>`;
+    // --- Helper function to extract slug from API link ---
+    function extractSlug(link) {
+        // Assumes link format like "vn/some-slug.json" or "developer/dev-slug.json"
+        const parts = link.split('/');
+        if (parts.length > 1) {
+            return parts[1].replace('.json', '');
+        }
+        return null; // Or handle error/default
     }
-  }
 
-  // Render visual novels into the template
-  function renderVisualNovels(posts) {
-    vnListContainer.innerHTML = posts.map(post => `
-      <div class="vn-container">
-        <div class="vn-title">
-          <!-- Update link to use href for routing -->
-          <a href="/vn/${post.link}">${post.title}</a>
+    // --- Fetch and display visual novels (for index/pagination) ---
+    async function fetchVisualNovelsList(page = 1) {
+      const pageFile = page <= 1 ? 'index.json' : `page-${page}.json`;
+      const url = `${baseUrl}${hobby}/posts/${pageFile}`;
+      console.log(`Fetching list: ${url}`);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
+        const data = await response.json();
+        renderVisualNovels(data.posts);
+        renderPagination(data.pagination);
+        showIndexPage(); // Ensure index view is visible
+      } catch (error) {
+        console.error('Error fetching visual novels list:', error);
+        document.getElementById('vn-list').innerHTML = '<p>Error loading visual novels.</p>';
+        document.getElementById('pagination').innerHTML = '';
+      }
+    }
+
+    // --- Render visual novels into the template ---
+    function renderVisualNovels(posts) {
+      const vnList = document.getElementById('vn-list');
+      vnList.innerHTML = posts.map(post => {
+        const slug = extractSlug(post.link); // Get slug for the URL
+        return `
+        <div class="vn-container">
+          <div class="vn-title">
+            <!-- Use real href for routing -->
+            <a href="/vn/${slug}">${post.title}</a>
+          </div>
+          <div class="vn-description">${post.description}</div>
+          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         </div>
+      `}).join('');
+      // NO event listeners here anymore - handled by router
+    }
+
+    // --- Render pagination ---
+    function renderPagination(pagination) {
+      const paginationContainer = document.getElementById('pagination');
+      let html = '';
+      if (pagination.previousPage) {
+          // Link to the specific page number URL
+          html += `<a href="/page/${pagination.previousPage}">Previous</a> `;
+      }
+      html += `<span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>`;
+      if (pagination.nextPage) {
+          // Link to the specific page number URL
+          html += ` <a href="/page/${pagination.nextPage}">Next</a>`;
+      }
+      paginationContainer.innerHTML = html;
+      // NO event listeners here anymore - handled by router
+    }
+
+    // --- Fetch and render details for a specific visual novel ---
+    async function fetchAndRenderVNDetails(slug) {
+      const url = `${baseUrl}${hobby}/${slug}.json`;
+      console.log(`Fetching VN details: ${url}`);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
+        const vnDetails = await response.json();
+        renderDetails(vnDetails); // Render the details
+        document.getElementById('page-title').textContent = vnDetails.title; // Update page title
+        showDetailsPage(); // Show the details view
+      } catch (error) {
+        console.error(`Error fetching VN details for slug ${slug}:`, error);
+        document.getElementById('vn-details').innerHTML = '<p>Error loading details.</p>';
+        showDetailsPage(); // Still show details page, but with error
+      }
+    }
+
+    // --- Render VN details into the template ---
+    function renderDetails(post) {
+      const detailsContainer = document.getElementById('vn-details');
+      const vnSlug = extractSlug(post.link); // Get current VN slug if needed later
+
+      detailsContainer.innerHTML = `
+        <div class="vn-title">${post.title}</div>
         <div class="vn-description">${post.description}</div>
         ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-      </div>
-    `).join('');
-
-    // NO LONGER NEEDED - Page.js handles clicks on these links
-    // document.querySelectorAll('.vn-title a').forEach(link => { ... });
-  }
-
-  // Render pagination (Keep existing logic, but ensure links don't trigger page reload)
-  function renderPagination(pagination) {
-    paginationContainer.innerHTML = `
-      ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
-      <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-      ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
-    `;
-
-    // Keep event listeners for pagination as they modify the *current* view's data
-    document.querySelectorAll('#pagination a').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault(); // Prevent page reload/hash change
-        const page = e.target.getAttribute('data-page');
-        fetchVisualNovels(`${baseUrl}/${page}`); // Fetch and re-render the list
-      });
-    });
-  }
-
-  // Fetch and render details for a specific visual novel (Details View)
-  async function fetchAndRenderDetails(vnLink) {
-    try {
-      const response = await fetch(`${baseUrl}${vnLink}`);
-      if (!response.ok) throw new Error('Network response was not ok');
-      const vnDetails = await response.json();
-      renderDetails(vnDetails);
-      showDetailsPage(vnDetails.title); // Show details view and set title
-    } catch (error) {
-      console.error('Error fetching visual novel details:', error);
-      vnDetailsArticle.innerHTML = `<p>Error loading details.</p>`;
-      showDetailsPage('Error'); // Show details view even on error
+        ${post.developers?.length ? `
+          <div class="vn-developers">
+            <strong>Developers:</strong>
+            <ul>${post.developers.map(dev => {
+              const devSlug = extractSlug(dev.link); // Get dev slug for URL
+              return `
+              <li>
+                <!-- Use real href for routing -->
+                <a href="/developer/${devSlug}">${dev.title}</a>
+              </li>
+            `}).join('')}</ul>
+          </div>
+        ` : ''}
+        ${post.tags?.length ? `
+          <div class="vn-tags">
+            <strong>Tags:</strong>
+            <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+        ${post.screenshots?.length ? `
+          <div class="vn-screenshots">
+            <strong>Screenshots:</strong>
+            <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
+          </div>
+        ` : ''}
+      `;
+      // NO event listeners here anymore - handled by router
     }
-  }
 
-  // Render details into the template
-  function renderDetails(post) {
-    vnDetailsArticle.innerHTML = `
-      <div class="vn-title">${post.title}</div>
-      <div class="vn-description">${post.description}</div>
-      ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-      ${post.developers?.length ? `
-        <div class="vn-developers">
-          <strong>Developers:</strong>
-          <ul>${post.developers.map(dev => `
-            <li>
-              <!-- Update link to use href for routing -->
-              <a href="/developer/${dev.link}">${dev.title}</a>
-            </li>
-          `).join('')}</ul>
-        </div>
-      ` : ''}
-      ${post.tags?.length ? `
-        <div class="vn-tags">
-          <strong>Tags:</strong>
-          <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
-        </div>
-      ` : ''}
-      ${post.screenshots?.length ? `
-        <div class="vn-screenshots">
-          <strong>Screenshots:</strong>
-          <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
-        </div>
-      ` : ''}
-    `;
-    // Removed call to updateOpenGraphMetaTags(post);
-
-    // NO LONGER NEEDED - Page.js handles clicks on these links
-    // document.querySelectorAll('.vn-developers a').forEach(link => { ... });
-  }
-
-  // Fetch and render details for a specific developer (Details View)
-  async function fetchAndRenderDeveloperDetails(developerLink) {
-    try {
-      const response = await fetch(`${baseUrl}${developerLink}`);
-      if (!response.ok) throw new Error('Network response was not ok');
-      const developerDetails = await response.json();
-      renderDeveloperDetails(developerDetails);
-      showDetailsPage(developerDetails.title); // Show details view and set title
-    } catch (error) {
-      console.error('Error fetching developer details:', error);
-      vnDetailsArticle.innerHTML = `<p>Error loading developer details.</p>`;
-      showDetailsPage('Error'); // Show details view even on error
+    // --- Fetch and render details for a specific developer ---
+    async function fetchAndRenderDeveloperDetails(slug) {
+        const url = `${baseUrl}developer/${slug}.json`; // Assuming developers are not under 'vn' path
+        console.log(`Fetching developer details: ${url}`);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
+        const developerDetails = await response.json();
+        renderDeveloperDetails(developerDetails); // Render details
+        document.getElementById('page-title').textContent = developerDetails.title; // Update title
+        showDetailsPage(); // Show the details view
+      } catch (error) {
+        console.error(`Error fetching developer details for slug ${slug}:`, error);
+        document.getElementById('vn-details').innerHTML = '<p>Error loading developer details.</p>';
+        showDetailsPage();
+      }
     }
-  }
 
-  // Render developer details into the template
-  function renderDeveloperDetails(developer) {
-    vnDetailsArticle.innerHTML = `
-      <div class="vn-title">${developer.title}</div>
-      <div class="vn-description">${developer.description || 'No description available.'}</div>
-      ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
-      ${developer.posts?.length ? `
-        <div class="vn-posts">
-          <strong>Visual Novels:</strong>
-          ${developer.posts.map(post => `
-            <div class="vn-container">
-              <div class="vn-title">
-                 <!-- Update link to use href for routing -->
-                <a href="/vn/${post.link}">${post.title}</a>
+    // --- Render developer details into the template ---
+    function renderDeveloperDetails(developer) {
+      const detailsContainer = document.getElementById('vn-details');
+      detailsContainer.innerHTML = `
+        <div class="vn-title">${developer.title}</div>
+        <div class="vn-description">${developer.description || 'No description available.'}</div>
+        ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
+        ${developer.posts?.length ? `
+          <div class="vn-posts">
+            <strong>Visual Novels by ${developer.title}:</strong>
+            ${developer.posts.map(post => {
+              const postSlug = extractSlug(post.link); // Get post slug for URL
+              return `
+              <div class="vn-container">
+                <div class="vn-title">
+                  <!-- Use real href for routing -->
+                  <a href="/vn/${postSlug}">${post.title}</a>
+                </div>
+                <div class="vn-description">${post.description}</div>
+                ${post.image?.url ? `<img class="vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
               </div>
-              <div class="vn-description">${post.description}</div>
-              ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-    `;
-    // Removed call to updateOpenGraphMetaTags(developer);
+            `}).join('')}
+          </div>
+        ` : ''}
+      `;
+      // NO event listeners here anymore - handled by router
+    }
 
-    // NO LONGER NEEDED - Page.js handles clicks on these links
-    // document.querySelectorAll('.vn-posts a').forEach(link => { ... });
-  }
+    // --- Show the index page ---
+    function showIndexPage() {
+      console.log("Showing Index Page");
+      document.getElementById('index-container').style.display = 'block';
+      document.getElementById('details-container').style.display = 'none';
+      document.getElementById('page-title').textContent = 'Visual Novels';
+       // Clear search results when going back to index maybe?
+       document.getElementById('search-results').innerHTML = '';
+       document.getElementById('search-bar').value = '';
+    }
+
+    // --- Show the details page ---
+    function showDetailsPage() {
+      console.log("Showing Details Page");
+      document.getElementById('index-container').style.display = 'none';
+      document.getElementById('details-container').style.display = 'block';
+      // Title is set within the detail fetch functions
+       document.getElementById('search-results').innerHTML = ''; // Clear search results
+    }
+
+    // --- Modify the Back to List link ---
+    // Change the href directly in the HTML
+    // <a href="/" id="back-to-index">Back to List</a>
 
 
-  // --- Routing Setup ---
-  document.addEventListener('DOMContentLoaded', () => {
+    // --- Define Routes using miniRouter ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Route for the homepage (first page of VNs)
+        miniRouter.route('/', () => {
+            console.log('Routing to /');
+            fetchVisualNovelsList(1); // Fetch page 1
+        });
 
-    // Base path configuration if your app isn't at the root
-    // page.base('/your-base-path'); // e.g., page.base('/my-spa')
+        // Route for paginated index pages
+        miniRouter.route('/page/:num', (ctx) => {
+            console.log(`Routing to /page/${ctx.params.num}`);
+            const pageNum = parseInt(ctx.params.num, 10);
+            if (!isNaN(pageNum) && pageNum > 0) {
+                fetchVisualNovelsList(pageNum);
+            } else {
+                console.error(`Invalid page number: ${ctx.params.num}`);
+                miniRouter.navigate('/'); // Redirect to home on invalid page
+            }
+        });
 
-    // Route for the index page (list of VNs)
-    page('*', () => {
-      console.log('Routing to index');
-      showIndexPage();
-      // Fetch the initial page of VNs
-      fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
+        // Route for VN details
+        miniRouter.route('/vn/:slug', (ctx) => {
+            console.log(`Routing to /vn/${ctx.params.slug}`);
+            fetchAndRenderVNDetails(ctx.params.slug);
+        });
+
+        // Route for Developer details
+        miniRouter.route('/developer/:slug', (ctx) => {
+            console.log(`Routing to /developer/${ctx.params.slug}`);
+            fetchAndRenderDeveloperDetails(ctx.params.slug);
+        });
+
+        // --- Initialize the router ---
+        miniRouter.start();
+
+        // --- Keep Search Functionality Separate (for now) ---
+        // The search.js script can still work independently or be integrated later if needed
+        // If search results link to details pages, ensure they use the correct href format (e.g., /vn/slug)
     });
 
-    // Route for VN details
-    // Capture the rest of the path after /vn/ using (.*)
-    page('/vn/(.*)', (ctx) => {
-      const vnLink = ctx.params[0]; // Get the captured path segment
-      console.log(`Routing to VN details: ${vnLink}`);
-      // No need to call showDetailsPage here, fetchAndRenderDetails will do it
-      fetchAndRenderDetails(vnLink);
-    });
-
-    // Route for Developer details
-    // Capture the rest of the path after /developer/
-    page('/developer/(.*)', (ctx) => {
-      const developerLink = ctx.params[0]; // Get the captured path segment
-      console.log(`Routing to Developer details: ${developerLink}`);
-       // No need to call showDetailsPage here, fetchAndRenderDeveloperDetails will do it
-      fetchAndRenderDeveloperDetails(developerLink);
-    });
-
-    // Add a catch-all for routes not found (optional)
-    page('/', () => {
-        console.log('Route not found');
-        // You could show a 404 message
-        showIndexPage(); // Or redirect to index
-        vnListContainer.innerHTML = `<p>Page not found.</p>`;
-        paginationContainer.innerHTML = ''; // Clear pagination
-    });
-
-
-    // Start the router
-    page.start();
-
-    // NO LONGER NEEDED: Initial fetch is handled by the '/' route handler
-    // fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
-
-    // NO LONGER NEEDED: Back link is now a standard href handled by router
-    // backToIndexLink.addEventListener('click', (e) => { ... });
-  });
-
-</script>
-<script src="/page/src/search.js"></script> <!-- Keep your search script -->
+  </script>
+  <script src="/page/src/search.js"></script> <!-- Ensure this exists or remove if not needed -->
 
 </body>
 </html>
