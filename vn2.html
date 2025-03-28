@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" x-data="visualNovelApp()">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visual Novels</title>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- We can bind the title dynamically with Alpine -->
+  <title x-text="pageTitle + ' - Visual Novels'">Visual Novels</title>
+  <!-- Import Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,6 +26,7 @@
     .vn-title a {
       text-decoration: none;
       color: #007bff;
+      cursor: pointer; /* Indicate interactivity */
     }
     .vn-title a:hover {
       text-decoration: underline;
@@ -46,18 +49,24 @@
       margin: 0 5px;
       text-decoration: none;
       color: #007bff;
+      cursor: pointer;
     }
-    .pagination a.active {
+    .pagination a.active { /* Style active page if needed, though logic might change */
       font-weight: bold;
       color: #000;
     }
-    .vn-developers, .vn-tags, .vn-screenshots {
+    .vn-developers, .vn-tags, .vn-screenshots, .vn-posts { /* Added vn-posts */
       margin-bottom: 10px;
     }
     .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
       list-style-type: none;
       padding: 0;
     }
+     .vn-screenshots ul { /* Make screenshots display inline */
+       display: flex;
+       flex-wrap: wrap;
+       gap: 10px;
+     }
     .vn-developers li, .vn-tags li {
       display: inline-block;
       margin-right: 10px;
@@ -66,214 +75,338 @@
       border-radius: 3px;
     }
     .vn-screenshots img {
-      max-width: 100px;
-      margin-right: 10px;
-    }
-    #details-container {
-      display: none;
+      max-width: 100px; /* Keep screenshot size */
+      height: auto;
+      /* Removed margin-right, using gap now */
     }
     #back-to-index {
       display: block;
       margin-top: 20px;
       text-decoration: none;
       color: #007bff;
+      cursor: pointer;
     }
-    .vn-post-image {
-      max-width: 50px;
-      height: auto;
-      margin-left: 10px;
+    .loading-indicator {
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+        color: #888;
     }
-    [x-cloak] { display: none !important; }
+    /* Style for search results */
+    #search-results {
+       border: 1px solid #eee;
+       margin-top: 5px;
+       max-height: 300px;
+       overflow-y: auto;
+    }
+    .search-result-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+    }
+    .search-result-item:hover {
+        background-color: #f9f9f9;
+    }
+     .search-result-item:last-child {
+        border-bottom: none;
+    }
+
   </style>
 </head>
-<body x-cloak>
+<!-- Initialize Alpine state on the body -->
+<body x-data="visualNovelApp()" x-init="init()">
+
   <header>
-    <h1 x-text="pageTitle">Visual Novels</h1>
-    <input 
-      type="text" 
-      x-model="searchQuery" 
-      @input.debounce="searchVisualNovels()"
-      placeholder="Search Visual Novels..." 
-      style="width: 100%; padding: 10px; margin-bottom: 20px;"
-    >
-  </header>
-  
-  <main>
-    <section x-show="currentView === 'index'">
-      <div id="search-results" style="margin-top: 10px;" x-show="searchResults.length > 0">
-        <template x-for="post in searchResults" :key="post.link">
-          <div class="vn-container">
-            <div class="vn-title">
-              <a href="#" @click.prevent="fetchAndRenderDetails(post.link)" x-text="post.title"></a>
+    <!-- Bind h1 content to pageTitle state -->
+    <h1 id="page-title" x-text="pageTitle">Visual Novels</h1>
+    <!-- Bind search input to searchTerm state, trigger search on input -->
+    <input type="text"
+           id="search-bar"
+           placeholder="Search Visual Novels..."
+           style="width: 100%; padding: 10px; margin-bottom: 20px;"
+           x-model.debounce.500ms="searchTerm"
+           @input="searchVisualNovels()">
+    <!-- Container for search results -->
+    <div id="search-results" x-show="searchTerm.length > 1 && searchResults.length > 0">
+        <template x-for="result in searchResults" :key="result.link">
+            <div class="search-result-item" @click="showDetails(result.link); clearSearch()">
+                <strong x-text="result.title"></strong>
             </div>
-            <div class="vn-description" x-text="post.description"></div>
-            <img x-show="post.image?.url" class="vn-image" :src="post.image.url" :alt="post.title">
-          </div>
         </template>
-      </div>
-      
-      <div id="vn-list" x-show="searchResults.length === 0">
+         <div x-show="searchTerm.length > 1 && searchResults.length === 0 && !isLoadingSearch" class="search-result-item">
+            No results found.
+        </div>
+    </div>
+     <div x-show="isLoadingSearch" class="loading-indicator">Searching...</div>
+
+  </header>
+
+  <main>
+    <!-- Index View Container -->
+    <section id="index-container" x-show="currentView === 'index'">
+      <!-- Loading Indicator -->
+      <div x-show="isLoading" class="loading-indicator">Loading VNs...</div>
+
+      <!-- List of Visual Novels -->
+      <div id="vn-list" x-show="!isLoading">
         <template x-for="post in posts" :key="post.link">
           <div class="vn-container">
             <div class="vn-title">
-              <a href="#" @click.prevent="fetchAndRenderDetails(post.link)" x-text="post.title"></a>
+              <!-- Use @click to trigger showing details -->
+              <a @click.prevent="showDetails(post.link)" x-text="post.title"></a>
             </div>
             <div class="vn-description" x-text="post.description"></div>
-            <img x-show="post.image?.url" class="vn-image" :src="post.image.url" :alt="post.title">
+            <template x-if="post.image?.url">
+              <img class="vn-image" :src="post.image.url" :alt="post.title">
+            </template>
           </div>
         </template>
       </div>
-      
-      <div class="pagination" x-show="pagination && searchResults.length === 0">
-        <a 
-          href="#" 
-          @click.prevent="fetchVisualNovels(pagination.previousPage)" 
-          x-show="pagination.previousPage"
-        >
-          Previous
-        </a>
-        <span x-text="'Page ' + pagination.currentPage + ' of ' + pagination.totalPages"></span>
-        <a 
-          href="#" 
-          @click.prevent="fetchVisualNovels(pagination.nextPage)" 
-          x-show="pagination.nextPage"
-        >
-          Next
-        </a>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination" x-show="!isLoading && pagination.totalPages > 1">
+         <template x-if="pagination.previousPage">
+            <a @click.prevent="goToPage(pagination.previousPage)">« Previous</a>
+         </template>
+
+         <span>Page <span x-text="pagination.currentPage"></span> of <span x-text="pagination.totalPages"></span></span>
+
+         <template x-if="pagination.nextPage">
+            <a @click.prevent="goToPage(pagination.nextPage)">Next »</a>
+         </template>
       </div>
     </section>
-    
-    <section id="details-container" x-show="currentView === 'details'">
-      <article id="vn-details">
-        <div class="vn-title" x-text="currentPost.title"></div>
-        <div class="vn-description" x-text="currentPost.description"></div>
-        <img 
-          x-show="currentPost.image?.url" 
-          class="vn-image" 
-          :src="currentPost.image.url" 
-          :alt="currentPost.title"
-        >
-        
-        <div class="vn-developers" x-show="currentPost.developers?.length">
-          <strong>Developers:</strong>
-          <ul>
-            <template x-for="developer in currentPost.developers" :key="developer.link">
-              <li>
-                <a href="#" @click.prevent="fetchAndRenderDeveloperDetails(developer.link)" x-text="developer.title"></a>
-              </li>
+
+    <!-- Details View Container -->
+    <section id="details-container" x-show="currentView === 'details' || currentView === 'developer'" x-transition>
+       <!-- Loading Indicator -->
+       <div x-show="isLoading" class="loading-indicator">Loading Details...</div>
+
+      <!-- Detail Content (VN or Developer) -->
+       <article id="vn-details" class="vn-container" x-show="!isLoading && currentDetails">
+            <!-- Title -->
+            <div class="vn-title" x-text="currentDetails.title"></div>
+
+            <!-- Description -->
+            <div class="vn-description" x-html="currentDetails.description || 'No description available.'"></div> <!-- Use x-html if description might contain HTML -->
+
+            <!-- Image -->
+            <template x-if="currentDetails.image?.url">
+                <img class="vn-image" :src="currentDetails.image.url" :alt="currentDetails.title">
             </template>
-          </ul>
-        </div>
-        
-        <div class="vn-tags" x-show="currentPost.tags?.length">
-          <strong>Tags:</strong>
-          <ul>
-            <template x-for="tag in currentPost.tags" :key="tag">
-              <li x-text="tag"></li>
+
+            <!-- Developers (Only for VN Details) -->
+            <template x-if="currentView === 'details' && currentDetails.developers?.length">
+                <div class="vn-developers">
+                    <strong>Developers:</strong>
+                    <ul>
+                        <template x-for="developer in currentDetails.developers" :key="developer.link">
+                            <li>
+                                <a @click.prevent="showDeveloper(developer.link)" x-text="developer.title"></a>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
             </template>
-          </ul>
-        </div>
-        
-        <div class="vn-screenshots" x-show="currentPost.screenshots?.length">
-          <strong>Screenshots:</strong>
-          <ul>
-            <template x-for="screenshot in currentPost.screenshots" :key="screenshot.url">
-              <li><img :src="screenshot.url" alt="Screenshot"></li>
+
+            <!-- Tags (Only for VN Details) -->
+            <template x-if="currentView === 'details' && currentDetails.tags?.length">
+                <div class="vn-tags">
+                    <strong>Tags:</strong>
+                    <ul>
+                        <template x-for="tag in currentDetails.tags" :key="tag">
+                            <li x-text="tag"></li>
+                        </template>
+                    </ul>
+                </div>
             </template>
-          </ul>
-        </div>
-      </article>
-      <a href="#" id="back-to-index" @click.prevent="showIndexPage()">Back to List</a>
+
+            <!-- Screenshots (Only for VN Details) -->
+            <template x-if="currentView === 'details' && currentDetails.screenshots?.length">
+                <div class="vn-screenshots">
+                    <strong>Screenshots:</strong>
+                     <ul>
+                        <template x-for="screenshot in currentDetails.screenshots" :key="screenshot.url">
+                           <li><img :src="screenshot.url" alt="Screenshot"></li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <!-- Associated VNs (Only for Developer Details) -->
+            <template x-if="currentView === 'developer' && currentDetails.posts?.length">
+                <div class="vn-posts">
+                    <strong>Visual Novels:</strong>
+                    <template x-for="post in currentDetails.posts" :key="post.link">
+                        <div class="vn-container">
+                             <div class="vn-title">
+                                <a @click.prevent="showDetails(post.link)" x-text="post.title"></a>
+                             </div>
+                             <div class="vn-description" x-text="post.description"></div>
+                             <template x-if="post.image?.url">
+                                <img class="vn-image" :src="post.image.url" :alt="post.title">
+                             </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+             <template x-if="currentView === 'developer' && !currentDetails.posts?.length">
+                 <p>No visual novels found for this developer.</p>
+             </template>
+
+        </article>
+
+      <!-- Back Link -->
+      <a href="#" id="back-to-index" @click.prevent="goBackToIndex()">Back to List</a>
     </section>
   </main>
-  
+
   <footer>
     2025
   </footer>
 
   <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('visualNovelApp', () => ({
-        baseUrl: 'https://yuushaexa.github.io/headless/',
-        hobby: 'vn',
+    function visualNovelApp() {
+      const baseUrl = 'https://yuushaexa.github.io/headless/'; // Your base URL
+      const hobby = 'vn'; // Your specific hobby path segment
+
+      return {
+        // State Properties
         posts: [],
-        pagination: null,
-        currentPost: {},
-        currentView: 'index',
+        pagination: { currentPage: 1, totalPages: 1, nextPage: null, previousPage: null },
+        currentView: 'index', // 'index', 'details', 'developer'
+        currentDetails: null,
+        isLoading: false,
+        isLoadingSearch: false,
         pageTitle: 'Visual Novels',
-        searchQuery: '',
+        searchTerm: '',
         searchResults: [],
-        
+        apiBaseUrl: `${baseUrl}${hobby}/`, // Pre-build the base API path
+
+        // Initialization
         init() {
-          this.fetchVisualNovels(`${this.baseUrl}${this.hobby}/posts/index.json`);
+          console.log('Alpine app initialized');
+          this.fetchPosts(`${this.apiBaseUrl}posts/index.json`); // Fetch initial page
         },
-        
-        async fetchVisualNovels(url) {
+
+        // Methods
+        async fetchData(url) {
+          this.isLoading = true;
+          console.log(`Fetching: ${url}`);
           try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) {
+              throw new Error(`Network response was not ok: ${response.statusText} (URL: ${url})`);
+            }
             const data = await response.json();
-            this.posts = data.posts;
-            this.pagination = data.pagination;
+            console.log('Data received:', data);
+            return data;
           } catch (error) {
-            console.error('Error fetching visual novels:', error);
+            console.error('Fetch error:', error);
+            alert(`Failed to fetch data: ${error.message}`); // Basic user feedback
+            this.currentView = 'index'; // Go back to index on error?
+            return null; // Indicate failure
+          } finally {
+            this.isLoading = false;
           }
         },
-        
-        async searchVisualNovels() {
-          if (!this.searchQuery.trim()) {
-            this.searchResults = [];
-            return;
-          }
-          
-          try {
-            const response = await fetch(`${this.baseUrl}${this.hobby}/posts/index.json`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            
-            const query = this.searchQuery.toLowerCase();
-            this.searchResults = data.posts.filter(post => 
-              post.title.toLowerCase().includes(query) || 
-              post.description.toLowerCase().includes(query)
-            );
-          } catch (error) {
-            console.error('Error searching visual novels:', error);
-          }
+
+        async fetchPosts(url) {
+            const data = await this.fetchData(url);
+            if (data) {
+                this.posts = data.posts || [];
+                this.pagination = data.pagination || { currentPage: 1, totalPages: 1, nextPage: null, previousPage: null };
+                this.currentView = 'index';
+                this.pageTitle = 'Visual Novels';
+                window.scrollTo(0, 0); // Scroll to top on page change
+            }
         },
-        
-        async fetchAndRenderDetails(vnLink) {
-          try {
-            const response = await fetch(`${this.baseUrl}${vnLink}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            this.currentPost = await response.json();
-            this.showDetailsPage();
-          } catch (error) {
-            console.error('Error fetching visual novel details:', error);
-          }
+
+        async showDetails(link) {
+          this.currentDetails = null; // Clear previous details
+          const data = await this.fetchData(`${baseUrl}${link}`); // Use full link from data
+           if (data) {
+               this.currentDetails = data;
+               this.currentView = 'details';
+               this.pageTitle = data.title || 'Details';
+               window.scrollTo(0, 0);
+           }
         },
-        
-        async fetchAndRenderDeveloperDetails(developerLink) {
-          try {
-            const response = await fetch(`${this.baseUrl}${developerLink}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            this.currentPost = await response.json();
-            this.showDetailsPage();
-          } catch (error) {
-            console.error('Error fetching developer details:', error);
-          }
+
+        async showDeveloper(link) {
+          this.currentDetails = null; // Clear previous details
+          const data = await this.fetchData(`${baseUrl}${link}`); // Use full link from data
+           if (data) {
+               this.currentDetails = data;
+               this.currentView = 'developer';
+               this.pageTitle = data.title || 'Developer Details';
+               window.scrollTo(0, 0);
+           }
         },
-        
-        showIndexPage() {
+
+        goToPage(pageUrl) {
+           if (pageUrl) {
+               this.fetchPosts(`${baseUrl}${pageUrl}`); // Fetch the specific page index
+           }
+        },
+
+        goBackToIndex() {
           this.currentView = 'index';
           this.pageTitle = 'Visual Novels';
+          this.currentDetails = null; // Clear details when going back
+          // Optional: Re-fetch index if needed, but usually not necessary
+          // this.fetchPosts(`${this.apiBaseUrl}posts/index.json`);
         },
-        
-        showDetailsPage() {
-          this.currentView = 'details';
-          this.pageTitle = 'Details';
+
+        async searchVisualNovels() {
+            if (this.searchTerm.length < 2) {
+                this.searchResults = [];
+                this.isLoadingSearch = false;
+                return;
+            }
+            this.isLoadingSearch = true;
+            console.log(`Searching for: ${this.searchTerm}`);
+            // *** IMPORTANT: Adjust the search endpoint ***
+            // This assumes your API has a search endpoint like `/vn/search.json?q=query`
+            // You NEED to replace this with your actual search API endpoint structure.
+            const searchUrl = `${this.apiBaseUrl}search.json?q=${encodeURIComponent(this.searchTerm)}`;
+
+            try {
+                // Note: Using a separate fetch here as it might have different structure/loading needs
+                const response = await fetch(searchUrl);
+                 if (!response.ok) {
+                    // Handle potential 404 or other errors if search endpoint doesn't exist or fails
+                    if (response.status === 404) {
+                        console.warn(`Search endpoint not found (404): ${searchUrl}`);
+                        this.searchResults = []; // Assume no results if endpoint missing
+                    } else {
+                        throw new Error(`Search network response was not ok: ${response.statusText}`);
+                    }
+                } else {
+                     const data = await response.json();
+                    // Assuming the search endpoint returns an array of results { title: '...', link: '...' }
+                    // Adjust based on your actual search API response format
+                    this.searchResults = data.results || data || []; // Adapt based on response structure
+                    console.log('Search results:', this.searchResults);
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                this.searchResults = []; // Clear results on error
+            } finally {
+                this.isLoadingSearch = false;
+            }
+        },
+
+        clearSearch() {
+            this.searchTerm = '';
+            this.searchResults = [];
+            this.isLoadingSearch = false;
         }
-      }));
-    });
+
+      }
+    }
   </script>
+  <!-- Removed the old script block and the separate search.js script tag -->
 </body>
-  </html>
+</html>
