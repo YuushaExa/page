@@ -18,14 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, '') // Remove punctuation
       .split(/\s+/) // Split by whitespace
-      .filter((word) => word.length > 2); // Ignore short words
+      .filter((word) => word.length > 1); // Ignore short words
   };
 
   // Function to fetch and process search results
   const handleSearch = async (query) => {
     searchResults.innerHTML = ''; // Clear previous results
 
-    if (query.length >= 3) {
+    if (query.length >= 2) {
       try {
         // Tokenize the query into individual words
         const tokens = tokenize(query);
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch search index files for each token and retrieve document IDs
         const tokenResults = await Promise.all(
           tokens.map(async (token) => {
-            const prefix = token.slice(0, 3); // Extract the first three letters as the prefix
+            const prefix = token.slice(0, 2); // Extract the first three letters as the prefix
             const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
 
             // Fetch the JSON file for the prefix
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error fetching search index:', error);
         searchResults.textContent = 'No results found.';
       }
-    } else if (query.length > 0 && query.length < 3) {
+    } else if (query.length > 0 && query.length < 2) {
       // Inform the user to type at least 3 characters
       searchResults.textContent = 'Please type at least 3 characters to search.';
     } else {
