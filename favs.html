@@ -3,121 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- *** CHANGED: Updated title *** -->
   <title>My Favorites</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      background-color: #f4f4f4; /* Light background */
+      color: #333; /* Darker text */
     }
-    /* Using existing 'vn-' class names for simplicity, but they now represent generic items */
-    .vn-container { /* Renamed logically to item-container */
+    .vn-container { /* Represents a generic item container */
       border: 1px solid #ddd;
       padding: 15px;
       margin-bottom: 20px;
       border-radius: 5px;
+      background-color: #fff; /* White background for items */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
     }
-    .vn-title { /* Renamed logically to item-title */
-      font-size: 24px;
+    .vn-title { /* Represents an item title */
+      font-size: 20px; /* Slightly smaller */
       font-weight: bold;
       margin-bottom: 10px;
     }
     .vn-title a {
       text-decoration: none;
-      color: #007bff;
+      color: #0056b3; /* Darker blue link */
     }
     .vn-title a:hover {
       text-decoration: underline;
+      color: #003d80; /* Even darker blue on hover */
     }
-    .vn-description { /* Renamed logically to item-description (though not used in list anymore) */
-      font-size: 16px;
+    .vn-description { /* Represents an item description */
+      font-size: 14px; /* Smaller description */
       color: #555;
       margin-bottom: 10px;
     }
-    .vn-image { /* Renamed logically to item-image */
-      max-width: 100%;
+    .vn-image { /* Represents an item image */
+      max-width: 150px; /* Limit image size in list */
+      max-height: 150px;
       height: auto;
+      margin-top: 10px; /* Space above image */
       margin-bottom: 10px;
       display: block; /* Ensure image takes block space */
-    }
-    .pagination {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .pagination a {
-      margin: 0 5px;
-      text-decoration: none;
-      color: #007bff;
-    }
-    .pagination a.active {
-      font-weight: bold;
-      color: #000;
-    }
-     /* --- REMOVED Styles for unused elements ---
-    .vn-developers, .vn-tags, .vn-screenshots {
-      margin-bottom: 10px;
-    }
-    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    .vn-developers li, .vn-tags li {
-      display: inline-block;
-      margin-right: 10px;
-      background-color: #f0f0f0;
-      padding: 5px 10px;
+      border: 1px solid #eee; /* Slight border for images */
       border-radius: 3px;
     }
-    .vn-screenshots img {
-      max-width: 100px;
-      margin-right: 10px;
-    } */
+    .pagination {
+      margin-top: 30px; /* More space above pagination */
+      margin-bottom: 20px; /* Space below pagination */
+      text-align: center;
+    }
+    .pagination a, .pagination span {
+      margin: 0 8px; /* More spacing */
+      text-decoration: none;
+      color: #0056b3;
+      padding: 5px 10px; /* Add padding */
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+    .pagination a:hover {
+        background-color: #eee;
+    }
+    .pagination span { /* Style for non-links (Previous/Next disabled, current page info) */
+         color: #aaa;
+         background-color: #f9f9f9;
+         cursor: default;
+    }
     #details-container {
       display: none; /* Hide details by default */
     }
+    #details-container .vn-image { /* Larger image in details view */
+        max-width: 100%;
+        max-height: 400px; /* Optional max height */
+        margin-bottom: 15px;
+    }
     #back-to-index {
-      display: block;
+      display: inline-block; /* Better alignment */
       margin-top: 20px;
       text-decoration: none;
-      color: #007bff;
+      color: #0056b3;
+      padding: 8px 15px;
+      border: 1px solid #0056b3;
+      border-radius: 3px;
     }
-    /* --- REMOVED Style for vn-post-image as developers/posts list is gone ---
-    .vn-post-image {
-      max-width: 50px;
-      height: auto;
-      margin-left: 10px;
-    } */
+    #back-to-index:hover {
+        background-color: #e7f0fa;
+    }
+    #search-bar {
+        width: calc(100% - 22px); /* Adjust for padding */
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    #search-results .vn-container { /* Style search results like list items */
+        /* Inherits .vn-container styles */
+    }
+    footer {
+        margin-top: 40px;
+        text-align: center;
+        color: #777;
+        font-size: 12px;
+    }
+    h1#page-title {
+        color: #333;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <!-- *** CHANGED: Updated heading *** -->
     <h1 id="page-title">My Favorites</h1>
-    <!-- *** CHANGED: Updated search placeholder *** -->
-    <input type="text" id="search-bar" placeholder="Search Favorites..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
+    <input type="text" id="search-bar" placeholder="Search Favorites..." >
   </header>
   <main>
     <section id="index-container">
-      <div id="search-results" style="margin-top: 10px;"></div>
-      <!-- *** Renamed logically to item-list *** -->
+      <div id="search-results" style="margin-top: 10px; display: none;"></div>
       <div id="vn-list"></div>
       <div id="pagination" class="pagination"></div>
     </section>
     <section id="details-container" class="vn-container">
-      <!-- *** Renamed logically to item-details *** -->
       <article id="vn-details"></article>
-      <a href="#" id="back-to-index">Back to List</a>
+      <a href="#" id="back-to-index">« Back to List</a>
     </section>
   </main>
   <footer>
-    2025
+    © 2025 Your Name/Site
   </footer>
   <script>
     const baseUrl = 'https://yuushaexa.github.io/headless/';
-    // *** CHANGED: Updated hobby identifier ***
     const hobby = 'favs';
 
-    // Function to parse URL parameters (no change needed)
+    /**
+     * Checks if a URL string likely points to an image file based on its extension.
+     * @param {string | null} url The URL string to check.
+     * @returns {boolean} True if the URL ends with a common image extension, false otherwise.
+     */
+    function isImageUrl(url) {
+      if (!url) {
+        return false;
+      }
+      // Simple check for common image file extensions (case-insensitive)
+      return /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(url);
+    }
+
+    // Function to parse URL parameters
     function getUrlParameter(name) {
       name = name.replace(/[\[\]]/g, '\\$&');
       const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
@@ -127,234 +158,224 @@
       return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
 
-    // Function to update URL without reloading (no change needed)
+    // Function to update URL without reloading
     function updateUrl(path) {
       if (!path) {
           console.warn("Attempted to update URL with invalid path:", path);
           return;
       }
       const newUrl = window.location.pathname + '?json=' + encodeURIComponent(path);
-      // Use replaceState for the very first load to avoid polluting history
       const firstLoadPath = `${hobby}/posts/index.json`;
       if (!history.state && path === firstLoadPath) {
          window.history.replaceState({ path: path }, '', newUrl);
-      } else {
+      } else if (history.state?.path !== path) { // Avoid pushing same state
          window.history.pushState({ path: path }, '', newUrl);
       }
     }
 
-    // *** CHANGED: Renamed function, updated fetch URL logic slightly for clarity ***
     // Fetch and display items (List View)
     async function fetchItems(listUrl) {
-      console.log("Fetching Item List:", listUrl); // Debug log
+      console.log("Fetching Item List:", listUrl);
+      document.getElementById('vn-list').innerHTML = '<p>Loading items...</p>'; // Loading indicator
       try {
         const response = await fetch(listUrl);
         if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
         const data = await response.json();
-        renderItems(data.posts); // *** CHANGED: Call renamed function
+        renderItems(data.posts);
         renderPagination(data.pagination);
-        showIndexPage(); // Ensure the correct view is shown
+        showIndexPage();
       } catch (error) {
         console.error('Error fetching items:', error);
-        document.getElementById('vn-list').innerHTML = '<p>Error loading items.</p>';
+        document.getElementById('vn-list').innerHTML = `<p>Error loading items. ${error.message}</p>`;
         document.getElementById('pagination').innerHTML = '';
         showIndexPage();
       }
     }
 
-    // *** CHANGED: Renamed function, adapted template for 'favs' structure ***
     // Render items into the template
     function renderItems(posts) {
-      const itemList = document.getElementById('vn-list'); // Still using 'vn-list' ID
+      const itemList = document.getElementById('vn-list');
       if (!posts || posts.length === 0) {
-          itemList.innerHTML = '<p>No items found.</p>';
+          itemList.innerHTML = '<p>No items found on this page.</p>';
           return;
       }
       itemList.innerHTML = posts.map(post => `
         <div class="vn-container">
           <div class="vn-title">
-            <a href="#" data-item-link="${post.link}">${post.title}</a>
+            <a href="#" data-item-link="${post.link}">${post.title || 'Untitled'}</a>
           </div>
-          <!-- Description removed as it's not in the list data -->
-          <!-- Image handling updated: check if post.image is a truthy string -->
-          ${post.image ? `<img class="vn-image" src="${post.image}" alt="${post.title}">` : ''}
+          ${isImageUrl(post.image) ? `<img class="vn-image" src="${post.image}" alt="${post.title || ''}">` : ''}
         </div>
       `).join('');
 
       // Add event listeners to item links
-      // *** CHANGED: Use data-item-link attribute ***
-      document.querySelectorAll('.vn-title a[data-item-link]').forEach(link => {
+      itemList.querySelectorAll('.vn-title a[data-item-link]').forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
           const itemLink = e.target.getAttribute('data-item-link');
           if (itemLink) {
             updateUrl(itemLink);
-            fetchAndRenderDetails(itemLink); // Call detail fetcher
+            fetchAndRenderDetails(itemLink);
           }
         });
       });
     }
 
-    // Render pagination (no change needed in logic, uses pagination object directly)
+    // Render pagination
     function renderPagination(pagination) {
         const paginationContainer = document.getElementById('pagination');
         if (!pagination || typeof pagination.currentPage === 'undefined' || typeof pagination.totalPages === 'undefined') {
-            paginationContainer.innerHTML = ''; // Clear pagination if data is invalid/missing
+            paginationContainer.innerHTML = '';
             return;
         }
 
         let paginationHTML = '';
-        // Add Previous link if applicable
         if (pagination.previousPage) {
             paginationHTML += `<a href="#" data-page="${pagination.previousPage}">Previous</a>`;
         } else {
-            paginationHTML += `<span style="color: #ccc;">Previous</span>`; // Disabled look
+            paginationHTML += `<span>Previous</span>`;
         }
 
-        // Display current page info (only if totalPages > 0)
         if (pagination.totalPages > 0) {
            paginationHTML += ` <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span> `;
         } else {
-            paginationHTML += ` <span>Page 1 of 1</span> `; // Handle case of 0 total pages (e.g., single page result)
+           paginationHTML += ` <span>Page 1 of 1</span> `;
         }
 
-
-        // Add Next link if applicable
         if (pagination.nextPage) {
             paginationHTML += `<a href="#" data-page="${pagination.nextPage}">Next</a>`;
         } else {
-             paginationHTML += `<span style="color: #ccc;">Next</span>`; // Disabled look
+             paginationHTML += `<span>Next</span>`;
         }
 
         paginationContainer.innerHTML = paginationHTML;
 
-        // Add event listeners to pagination links
         paginationContainer.querySelectorAll('a[data-page]').forEach(link => {
             link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const pagePath = e.target.getAttribute('data-page');
-            if (pagePath) {
-                updateUrl(pagePath);
-                // *** CHANGED: Call fetchItems ***
-                fetchItems(`${baseUrl}${pagePath}`);
-            }
+                e.preventDefault();
+                const pagePath = e.target.getAttribute('data-page');
+                if (pagePath) {
+                    updateUrl(pagePath);
+                    fetchItems(`${baseUrl}${pagePath}`);
+                }
             });
         });
     }
 
 
-    // *** CHANGED: Renamed function ***
     // Fetch and render details for a specific item (Detail View)
-      // Fetch and render details for a specific item (Detail View)
+    // *** INCORPORATES ReferenceError FIX ***
     async function fetchAndRenderDetails(itemLink) {
-      console.log("Fetching Item Details:", `${baseUrl}${itemLink}`); // Debug log
+      console.log("Fetching Item Details:", `${baseUrl}${itemLink}`);
+      document.getElementById('vn-details').innerHTML = '<p>Loading details...</p>'; // Loading indicator
+      showDetailsPage(); // Show the container immediately
+
       let pageTitle = 'Details'; // Default title
+      let success = false;
 
       try {
         const response = await fetch(`${baseUrl}${itemLink}`);
+        let itemDetails = null; // Initialize itemDetails
+
         if (!response.ok) {
-            // Handle potential 404 or other errors
             if (response.status === 404) {
                  console.warn(`Detail file not found: ${itemLink}`);
-                 renderDetails(null); // Pass null to indicate not found
-                 pageTitle = 'Details Not Found'; // Set title for 404
+                 pageTitle = 'Details Not Found';
+                 // itemDetails remains null
             } else {
-                // For other network errors (500, etc.)
-                throw new Error(`Network response was not ok: ${response.statusText}`);
+                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
             }
-            // NOTE: itemDetails is NOT defined here
         } else {
-            // *** itemDetails is defined ONLY in this block ***
-            const itemDetails = await response.json();
-            renderDetails(itemDetails);
-            // Set title based on successfully fetched details
+            itemDetails = await response.json(); // Assign only on success
             pageTitle = itemDetails?.title || 'Details Loaded (No Title)';
+            success = true;
         }
 
-        showDetailsPage(); // Show the details section (even if empty/error)
-        // *** MOVED: Update page title *after* knowing the outcome ***
+        // Render based on whether itemDetails was populated
+        renderDetails(itemDetails, itemLink); // Pass itemLink for raw JSON link
+
+        // Update page title *after* knowing the outcome
         document.getElementById('page-title').textContent = pageTitle;
 
       } catch (error) {
         console.error('Error fetching item details:', error);
-        document.getElementById('vn-details').innerHTML = '<p>Error loading details.</p>';
-        showDetailsPage(); // Still show the details page structure with error message
+        document.getElementById('vn-details').innerHTML = `<p>Error loading details: ${error.message}.</p><p><a href="${baseUrl}${itemLink}" target="_blank" rel="noopener noreferrer">View Raw JSON</a> (if available)</p>`;
         // Set title specifically for catch block errors
         document.getElementById('page-title').textContent = 'Error Loading Details';
       }
     }
 
-    // *** CHANGED: Renamed function, simplified template for 'favs' detail structure ***
     // Render Item details into the template
-    function renderDetails(post) {
-      const detailsContainer = document.getElementById('vn-details'); // Still using 'vn-details' ID
+    // *** INCORPORATES isImageUrl FIX and handles null post ***
+    function renderDetails(post, itemLink) { // Added itemLink parameter
+      const detailsContainer = document.getElementById('vn-details');
 
-      // Handle case where detail file wasn't found or post is invalid
-      if (!post || !post.title) {
+      // Handle case where detail file wasn't found (post is null) or post is invalid
+      if (!post) {
           detailsContainer.innerHTML = `
              <div class="vn-title">Item Details Not Found</div>
-             <div class="vn-description">The specific details for this item could not be loaded. It might be missing or there was an error.</div>
-             <p><a href="${baseUrl}${getUrlParameter('json')}" target="_blank" rel="noopener noreferrer">View Raw JSON</a> (if available)</p>
+             <div class="vn-description">The specific details for this item could not be loaded (file might be missing or invalid).</div>
+             <p>Attempted to load: <a href="${baseUrl}${itemLink}" target="_blank" rel="noopener noreferrer">${itemLink}</a></p>
           `;
-           // Update title just in case it wasn't set correctly in the catch block
-          document.getElementById('page-title').textContent = 'Details Not Found';
+          // Title is set in fetchAndRenderDetails
           return;
       }
 
-      // Render the basic details available
+      // Render the details available
       detailsContainer.innerHTML = `
-        <div class="vn-title">${post.title}</div>
-        <!-- Assuming no description in detail JSON based on example, add if available -->
-        <!-- <div class="vn-description">${post.description || 'No description available.'}</div> -->
-        ${post.image ? `<img class="vn-image" src="${post.image}" alt="${post.title}">` : '<p>No image available.</p>'}
-        <!-- Removed developers, tags, screenshots sections -->
-        <p>Link: <a href="${baseUrl}${post.link}" target="_blank" rel="noopener noreferrer">${post.link}</a></p>
-        <!-- You could add a link to the original source if the 'image' field is used for that -->
-        ${post.image && post.image.startsWith('http') ? `<p>Source Link: <a href="${post.image}" target="_blank" rel="noopener noreferrer">${post.image}</a></p>` : ''}
+        <div class="vn-title">${post.title || 'Untitled'}</div>
 
+        <!-- Image / Link Handling -->
+        ${isImageUrl(post.image)
+            ? `<img class="vn-image" src="${post.image}" alt="${post.title || ''}">`
+            : post.image // If post.image has a value but isn't an image URL
+                ? `<div class="vn-description">Source Link: <a href="${post.image}" target="_blank" rel="noopener noreferrer">${post.image}</a></div>`
+                : '<div class="vn-description">No image or source link provided.</div>'
+        }
+
+        <!-- Link to the source JSON file -->
+        <div class="vn-description" style="margin-top: 15px;">Internal JSON: <a href="${baseUrl}${post.link}" target="_blank" rel="noopener noreferrer">${post.link}</a></div>
       `;
-      // No developer links or other complex elements to attach listeners to in this simplified view.
     }
 
-    // --- REMOVED Developer specific functions ---
-    // async function fetchAndRenderDeveloperDetails(developerLink) { ... }
-    // function renderDeveloperDetails(developer) { ... }
-
-    // Show the index page (list view) (no change needed)
+    // Show the index page (list view)
     function showIndexPage() {
       document.getElementById('index-container').style.display = 'block';
       document.getElementById('details-container').style.display = 'none';
-      // *** CHANGED: Consistent title setting ***
       document.getElementById('page-title').textContent = 'My Favorites';
       document.getElementById('search-bar').style.display = 'block';
+      document.getElementById('search-results').style.display = 'none'; // Hide search results when showing index
+      document.getElementById('vn-list').style.display = 'block';       // Ensure list is visible
+      document.getElementById('pagination').style.display = 'block';   // Ensure pagination is visible
     }
 
-    // Show the details page (Item Detail) (no change needed)
+    // Show the details page (Item Detail)
     function showDetailsPage() {
       document.getElementById('index-container').style.display = 'none';
       document.getElementById('details-container').style.display = 'block';
       // Title is set within the fetchAndRenderDetails function
-      document.getElementById('search-bar').style.display = 'none';
+      document.getElementById('search-bar').style.display = 'none'; // Hide search bar on details
+      window.scrollTo(0, 0); // Scroll to top when showing details
     }
 
-    // Back to index page click handler (no change needed)
+    // Back to index page click handler
     document.getElementById('back-to-index').addEventListener('click', (e) => {
       e.preventDefault();
-      const defaultIndexPath = `${hobby}/posts/index.json`;
-      // Check history state - if previous state exists and was a list page, go back
-      if (history.state && history.state.path && (history.state.path === defaultIndexPath || history.state.path.startsWith(`${hobby}/posts/page/`))) {
-         history.back(); // Use browser back to return to the previous list state
+      // Use browser history back if the previous state was a list page
+      if (history.state && history.state.path && (history.state.path.startsWith(`${hobby}/posts/page/`) || history.state.path === `${hobby}/posts/index.json`)) {
+         history.back();
       } else {
-         // Otherwise, navigate explicitly to the first page
+         // Otherwise, navigate explicitly to the first page index
+         const defaultIndexPath = `${hobby}/posts/index.json`;
          updateUrl(defaultIndexPath);
-         fetchItems(`${baseUrl}${defaultIndexPath}`); // *** CHANGED: Call fetchItems ***
+         fetchItems(`${baseUrl}${defaultIndexPath}`);
       }
     });
 
-    // --- UPDATED Popstate Handler (Removed developer logic) ---
+    // Popstate Handler
     window.addEventListener('popstate', (event) => {
       const jsonParam = getUrlParameter('json');
-      console.log("Popstate triggered. Path from state:", event.state?.path, "URL jsonParam:", jsonParam); // Debugging
+      console.log("Popstate triggered. Path from state:", event.state?.path, "URL jsonParam:", jsonParam);
 
       const targetPath = event.state?.path || jsonParam;
       const defaultIndexPath = `${hobby}/posts/index.json`;
@@ -362,128 +383,110 @@
       if (targetPath) {
         const fullUrl = `${baseUrl}${targetPath}`;
 
-        // Check for list pages (index or page/N)
         if (targetPath === defaultIndexPath || targetPath.startsWith(`${hobby}/posts/page/`)) {
           console.log("Popstate: Loading list page:", targetPath);
-          fetchItems(fullUrl); // *** CHANGED: Call fetchItems ***
+          fetchItems(fullUrl);
         }
-        // Check for Item detail pages (ensure it's not a list page)
         else if (targetPath.startsWith(`${hobby}/posts/`) && !targetPath.includes('/page/')) {
            console.log("Popstate: Loading item details:", targetPath);
-           fetchAndRenderDetails(targetPath); // *** CHANGED: Call fetchAndRenderDetails ***
+           fetchAndRenderDetails(targetPath);
         }
-        // Handle unknown patterns - default to index
         else {
           console.warn("Popstate: Unhandled path:", targetPath, "Defaulting to index.");
-          fetchItems(`${baseUrl}${defaultIndexPath}`); // *** CHANGED: Call fetchItems ***
-          // Update URL to reflect the default state we loaded
-          updateUrl(defaultIndexPath);
+          fetchItems(`${baseUrl}${defaultIndexPath}`);
+          updateUrl(defaultIndexPath); // Correct URL if defaulted
         }
       } else {
-        // No path found in state or URL param - load the default index page
         console.log("Popstate: No path found, loading default index.");
-        fetchItems(`${baseUrl}${defaultIndexPath}`); // *** CHANGED: Call fetchItems ***
-        // Update URL to reflect the default state we loaded (use replaceState)
+        fetchItems(`${baseUrl}${defaultIndexPath}`);
         const newUrl = window.location.pathname + '?json=' + encodeURIComponent(defaultIndexPath);
         window.history.replaceState({ path: defaultIndexPath }, '', newUrl);
       }
     });
-    // --- End of UPDATED Popstate Handler ---
 
 
-    // Fetch initial data on page load (Removed developer logic)
+    // Initial Load Logic
     document.addEventListener('DOMContentLoaded', () => {
       const jsonParam = getUrlParameter('json');
       const defaultIndexPath = `${hobby}/posts/index.json`;
-      const initialPath = jsonParam || defaultIndexPath; // Default to index if no param
+      const initialPath = jsonParam || defaultIndexPath;
 
-      console.log("DOMContentLoaded: Initial path determined as:", initialPath);
+      console.log("DOMContentLoaded: Initial path:", initialPath);
 
-      // Determine what content to load based on the initial path
       if (initialPath === defaultIndexPath || initialPath.startsWith(`${hobby}/posts/page/`)) {
-          fetchItems(`${baseUrl}${initialPath}`); // *** CHANGED: Call fetchItems ***
-          // Update URL only if jsonParam was null initially (to add the default)
-          if (!jsonParam) {
+          fetchItems(`${baseUrl}${initialPath}`);
+          if (!jsonParam) { // Add default path to URL if not present
               updateUrl(initialPath);
           }
       } else if (initialPath.startsWith(`${hobby}/posts/`) && !initialPath.includes('/page/')) {
-          fetchAndRenderDetails(initialPath); // *** CHANGED: Call fetchAndRenderDetails ***
+          fetchAndRenderDetails(initialPath);
+          // No need to call updateUrl here as jsonParam already exists
       } else {
-          // Fallback for unknown initial path - load index
           console.warn("DOMContentLoaded: Unhandled initial path:", initialPath, "Loading default index.");
-          fetchItems(`${baseUrl}${defaultIndexPath}`); // *** CHANGED: Call fetchItems ***
+          fetchItems(`${baseUrl}${defaultIndexPath}`);
           updateUrl(defaultIndexPath); // Ensure URL reflects the loaded state
       }
 
-       // Initialize search
+       // Initialize search (ensure search.js is loaded and provides this function)
        if (typeof initializeSearch === 'function') {
             initializeSearch(baseUrl, hobby, renderSearchResults, clearSearchResults);
+            console.log("Search initialized.");
        } else {
-            console.warn("Search initialization function not found.");
+            console.warn("Search initialization function (initializeSearch) not found. Ensure search.js is loaded correctly.");
        }
     });
 
-    // --- Search related functions (Updated template) ---
+    // --- Search related functions ---
+    // *** INCORPORATES isImageUrl FIX ***
     function renderSearchResults(results) {
         const resultsContainer = document.getElementById('search-results');
-        const itemListContainer = document.getElementById('vn-list'); // Still 'vn-list' ID
+        const itemListContainer = document.getElementById('vn-list');
         const paginationContainer = document.getElementById('pagination');
 
+        itemListContainer.style.display = 'none'; // Hide regular list
+        paginationContainer.style.display = 'none'; // Hide pagination
+        resultsContainer.style.display = 'block'; // Show results container
+
         if (results && results.length > 0) {
-            itemListContainer.style.display = 'none'; // Hide regular list
-            paginationContainer.style.display = 'none'; // Hide pagination
-            resultsContainer.style.display = 'block'; // Show results container
-            // *** CHANGED: Adapted template for 'favs' search results ***
             resultsContainer.innerHTML = results.map(post => `
                 <div class="vn-container">
                   <div class="vn-title">
-                    <!-- *** CHANGED: Use data-item-link *** -->
-                    <a href="#" data-item-link="${post.link}">${post.title}</a>
+                    <a href="#" data-item-link="${post.link}">${post.title || 'Untitled'}</a>
                   </div>
-                  <!-- Description removed -->
-                  <!-- Image handling updated -->
-                  ${post.image ? `<img class="vn-image" src="${post.image}" alt="${post.title}">` : ''}
+                   ${isImageUrl(post.image) ? `<img class="vn-image" src="${post.image}" alt="${post.title || ''}">` : ''}
                 </div>
             `).join('');
 
-            // Add event listeners for search result links
-            // *** CHANGED: Use data-item-link ***
              resultsContainer.querySelectorAll('a[data-item-link]').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const itemLink = e.target.closest('a').getAttribute('data-item-link');
                      if (itemLink) {
                         updateUrl(itemLink);
-                        fetchAndRenderDetails(itemLink); // *** CHANGED: Call fetchAndRenderDetails ***
-                        clearSearchResults(); // Clear search results when navigating away
-                        document.getElementById('search-bar').value = ''; // Clear search bar text
+                        fetchAndRenderDetails(itemLink);
+                        clearSearchResults(); // Clear results view
+                        document.getElementById('search-bar').value = ''; // Clear search input
                      }
                 });
              });
 
         } else {
             resultsContainer.innerHTML = '<p>No results found.</p>';
-            resultsContainer.style.display = 'block';
-             itemListContainer.style.display = 'none'; // Keep regular list hidden
-             paginationContainer.style.display = 'none'; // Keep pagination hidden
         }
     }
 
-    // Function to clear search results (no change needed)
     function clearSearchResults() {
         const resultsContainer = document.getElementById('search-results');
-        const itemListContainer = document.getElementById('vn-list');
-        const paginationContainer = document.getElementById('pagination');
-
         resultsContainer.innerHTML = '';
         resultsContainer.style.display = 'none';
-        itemListContainer.style.display = 'block'; // Show regular list again
-        paginationContainer.style.display = 'block'; // Show pagination again
+        // Don't automatically show the list/pagination here,
+        // showIndexPage or subsequent navigation will handle it.
     }
     // --- End of Search related functions ---
 
   </script>
   <!-- Ensure search.js is loaded *after* the main script block -->
+  <!-- Make sure the path to search.js is correct relative to this HTML file -->
   <script src="/page/src/search.js"></script>
 </body>
 </html>
