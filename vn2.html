@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- We can bind the title dynamically with Alpine -->
-  <title x-text="pageTitle + ' - Visual Novels'">Visual Novels</title>
-  <!-- Import Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <title>Visual Novels</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      line-height: 1.6; /* Improved readability */
+    }
+    header, main, footer {
+      max-width: 900px; /* Limit width for better readability on large screens */
+      margin-left: auto;
+      margin-right: auto;
     }
     .vn-container {
       border: 1px solid #ddd;
       padding: 15px;
       margin-bottom: 20px;
       border-radius: 5px;
+      background-color: #fff; /* Add background for contrast */
     }
     .vn-title {
       font-size: 24px;
@@ -26,7 +30,6 @@
     .vn-title a {
       text-decoration: none;
       color: #007bff;
-      cursor: pointer; /* Indicate interactivity */
     }
     .vn-title a:hover {
       text-decoration: underline;
@@ -40,373 +43,432 @@
       max-width: 100%;
       height: auto;
       margin-bottom: 10px;
+      border-radius: 3px; /* Slightly rounded images */
     }
     .pagination {
       margin-top: 20px;
       text-align: center;
     }
-    .pagination a {
+    .pagination a, .pagination span { /* Style span too */
       margin: 0 5px;
       text-decoration: none;
       color: #007bff;
-      cursor: pointer;
+      padding: 5px 10px; /* Add padding */
+      border: 1px solid transparent; /* Layout consistency */
+      border-radius: 3px;
     }
-    .pagination a.active { /* Style active page if needed, though logic might change */
+    .pagination span {
+      color: #555; /* De-emphasize non-link text */
+    }
+    .pagination a:hover {
+        background-color: #f0f0f0;
+        border-color: #ddd;
+    }
+    .pagination a.active { /* Keep active style if needed later */
       font-weight: bold;
       color: #000;
     }
-    .vn-developers, .vn-tags, .vn-screenshots, .vn-posts { /* Added vn-posts */
-      margin-bottom: 10px;
+    .vn-details-section { /* Class for detail sections */
+      margin-bottom: 15px;
+      padding-left: 5px; /* Indent slightly */
+      border-left: 3px solid #eee; /* Visual separation */
     }
-    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
+    .vn-details-section strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+    .vn-details-section ul {
       list-style-type: none;
       padding: 0;
+      margin: 0; /* Remove default margin */
     }
-     .vn-screenshots ul { /* Make screenshots display inline */
-       display: flex;
-       flex-wrap: wrap;
-       gap: 10px;
-     }
-    .vn-developers li, .vn-tags li {
+    .vn-details-section li {
       display: inline-block;
-      margin-right: 10px;
-      background-color: #f0f0f0;
-      padding: 5px 10px;
-      border-radius: 3px;
+      margin-right: 8px;
+      margin-bottom: 5px; /* Spacing for wrapping items */
+    }
+    .tag-item { /* Specific style for tags */
+        background-color: #e9ecef;
+        padding: 3px 8px;
+        border-radius: 10px; /* Pill shape */
+        font-size: 0.9em;
+        color: #495057;
     }
     .vn-screenshots img {
-      max-width: 100px; /* Keep screenshot size */
-      height: auto;
-      /* Removed margin-right, using gap now */
+      max-width: 120px; /* Slightly larger */
+      height: auto; /* Maintain aspect ratio */
+      margin-right: 10px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      vertical-align: middle; /* Align images nicely */
+    }
+    #details-container {
+      display: none; /* Hide details by default */
     }
     #back-to-index {
-      display: block;
+      display: inline-block; /* Treat like a button */
       margin-top: 20px;
+      padding: 8px 15px;
       text-decoration: none;
       color: #007bff;
-      cursor: pointer;
+      border: 1px solid #007bff;
+      border-radius: 3px;
     }
-    .loading-indicator {
+    #back-to-index:hover {
+        background-color: #007bff;
+        color: white;
+    }
+    .vn-post-image { /* Kept from original, ensure usage */
+      max-width: 50px;
+      height: auto;
+      margin-left: 10px;
+    }
+    #search-bar { /* Moved from inline */
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      box-sizing: border-box; /* Include padding in width */
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .loading-indicator, .error-message {
         text-align: center;
         padding: 20px;
-        font-style: italic;
-        color: #888;
+        font-size: 1.1em;
+        display: none; /* Hidden by default */
     }
-    /* Style for search results */
-    #search-results {
-       border: 1px solid #eee;
-       margin-top: 5px;
-       max-height: 300px;
-       overflow-y: auto;
+    .error-message {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
     }
-    .search-result-item {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-    }
-    .search-result-item:hover {
-        background-color: #f9f9f9;
-    }
-     .search-result-item:last-child {
-        border-bottom: none;
-    }
-
   </style>
 </head>
-<!-- Initialize Alpine state on the body -->
-<body x-data="visualNovelApp()" x-init="init()">
-
+<body>
   <header>
-    <!-- Bind h1 content to pageTitle state -->
-    <h1 id="page-title" x-text="pageTitle">Visual Novels</h1>
-    <!-- Bind search input to searchTerm state, trigger search on input -->
-    <input type="text"
-           id="search-bar"
-           placeholder="Search Visual Novels..."
-           style="width: 100%; padding: 10px; margin-bottom: 20px;"
-           x-model.debounce.500ms="searchTerm"
-           @input="searchVisualNovels()">
-    <!-- Container for search results -->
-    <div id="search-results" x-show="searchTerm.length > 1 && searchResults.length > 0">
-        <template x-for="result in searchResults" :key="result.link">
-            <div class="search-result-item" @click="showDetails(result.link); clearSearch()">
-                <strong x-text="result.title"></strong>
-            </div>
-        </template>
-         <div x-show="searchTerm.length > 1 && searchResults.length === 0 && !isLoadingSearch" class="search-result-item">
-            No results found.
-        </div>
-    </div>
-     <div x-show="isLoadingSearch" class="loading-indicator">Searching...</div>
-
+    <h1 id="page-title">Visual Novels</h1>
+    <input type="text" id="search-bar" placeholder="Search Visual Novels..." >
   </header>
-
   <main>
-    <!-- Index View Container -->
-    <section id="index-container" x-show="currentView === 'index'">
-      <!-- Loading Indicator -->
-      <div x-show="isLoading" class="loading-indicator">Loading VNs...</div>
+    <div id="loading-indicator" class="loading-indicator">Loading...</div>
+    <div id="error-message" class="error-message"></div>
 
-      <!-- List of Visual Novels -->
-      <div id="vn-list" x-show="!isLoading">
-        <template x-for="post in posts" :key="post.link">
-          <div class="vn-container">
-            <div class="vn-title">
-              <!-- Use @click to trigger showing details -->
-              <a @click.prevent="showDetails(post.link)" x-text="post.title"></a>
-            </div>
-            <div class="vn-description" x-text="post.description"></div>
-            <template x-if="post.image?.url">
-              <img class="vn-image" :src="post.image.url" :alt="post.title">
-            </template>
-          </div>
-        </template>
-      </div>
-
-      <!-- Pagination -->
-      <div id="pagination" class="pagination" x-show="!isLoading && pagination.totalPages > 1">
-         <template x-if="pagination.previousPage">
-            <a @click.prevent="goToPage(pagination.previousPage)">« Previous</a>
-         </template>
-
-         <span>Page <span x-text="pagination.currentPage"></span> of <span x-text="pagination.totalPages"></span></span>
-
-         <template x-if="pagination.nextPage">
-            <a @click.prevent="goToPage(pagination.nextPage)">Next »</a>
-         </template>
-      </div>
+    <section id="index-container">
+      <div id="search-results" style="margin-top: 10px;"></div>
+      <div id="vn-list"></div>
+      <div id="pagination" class="pagination"></div>
     </section>
 
-    <!-- Details View Container -->
-    <section id="details-container" x-show="currentView === 'details' || currentView === 'developer'" x-transition>
-       <!-- Loading Indicator -->
-       <div x-show="isLoading" class="loading-indicator">Loading Details...</div>
-
-      <!-- Detail Content (VN or Developer) -->
-       <article id="vn-details" class="vn-container" x-show="!isLoading && currentDetails">
-            <!-- Title -->
-            <div class="vn-title" x-text="currentDetails.title"></div>
-
-            <!-- Description -->
-            <div class="vn-description" x-html="currentDetails.description || 'No description available.'"></div> <!-- Use x-html if description might contain HTML -->
-
-            <!-- Image -->
-            <template x-if="currentDetails.image?.url">
-                <img class="vn-image" :src="currentDetails.image.url" :alt="currentDetails.title">
-            </template>
-
-            <!-- Developers (Only for VN Details) -->
-            <template x-if="currentView === 'details' && currentDetails.developers?.length">
-                <div class="vn-developers">
-                    <strong>Developers:</strong>
-                    <ul>
-                        <template x-for="developer in currentDetails.developers" :key="developer.link">
-                            <li>
-                                <a @click.prevent="showDeveloper(developer.link)" x-text="developer.title"></a>
-                            </li>
-                        </template>
-                    </ul>
-                </div>
-            </template>
-
-            <!-- Tags (Only for VN Details) -->
-            <template x-if="currentView === 'details' && currentDetails.tags?.length">
-                <div class="vn-tags">
-                    <strong>Tags:</strong>
-                    <ul>
-                        <template x-for="tag in currentDetails.tags" :key="tag">
-                            <li x-text="tag"></li>
-                        </template>
-                    </ul>
-                </div>
-            </template>
-
-            <!-- Screenshots (Only for VN Details) -->
-            <template x-if="currentView === 'details' && currentDetails.screenshots?.length">
-                <div class="vn-screenshots">
-                    <strong>Screenshots:</strong>
-                     <ul>
-                        <template x-for="screenshot in currentDetails.screenshots" :key="screenshot.url">
-                           <li><img :src="screenshot.url" alt="Screenshot"></li>
-                        </template>
-                    </ul>
-                </div>
-            </template>
-
-            <!-- Associated VNs (Only for Developer Details) -->
-            <template x-if="currentView === 'developer' && currentDetails.posts?.length">
-                <div class="vn-posts">
-                    <strong>Visual Novels:</strong>
-                    <template x-for="post in currentDetails.posts" :key="post.link">
-                        <div class="vn-container">
-                             <div class="vn-title">
-                                <a @click.prevent="showDetails(post.link)" x-text="post.title"></a>
-                             </div>
-                             <div class="vn-description" x-text="post.description"></div>
-                             <template x-if="post.image?.url">
-                                <img class="vn-image" :src="post.image.url" :alt="post.title">
-                             </template>
-                        </div>
-                    </template>
-                </div>
-            </template>
-             <template x-if="currentView === 'developer' && !currentDetails.posts?.length">
-                 <p>No visual novels found for this developer.</p>
-             </template>
-
-        </article>
-
-      <!-- Back Link -->
-      <a href="#" id="back-to-index" @click.prevent="goBackToIndex()">Back to List</a>
+    <section id="details-container"> <!-- Removed vn-container class here -->
+      <article id="vn-details" class="vn-container"></article> <!-- Added vn-container class here -->
+      <a href="#" id="back-to-index">Back to List</a>
     </section>
   </main>
-
   <footer>
-    2025
+    <p style="text-align: center; color: #777; font-size: 0.9em;">© 2025</p> <!-- Added P tag and copyright symbol -->
   </footer>
 
   <script>
-    function visualNovelApp() {
-      const baseUrl = 'https://yuushaexa.github.io/headless/'; // Your base URL
-      const hobby = 'vn'; // Your specific hobby path segment
+    // Configuration
+    const baseUrl = 'https://yuushaexa.github.io/headless/';
+    const hobby = 'vn'; // Assuming this might change, keep it configurable
 
-      return {
-        // State Properties
-        posts: [],
-        pagination: { currentPage: 1, totalPages: 1, nextPage: null, previousPage: null },
-        currentView: 'index', // 'index', 'details', 'developer'
-        currentDetails: null,
-        isLoading: false,
-        isLoadingSearch: false,
-        pageTitle: 'Visual Novels',
-        searchTerm: '',
-        searchResults: [],
-        apiBaseUrl: `${baseUrl}${hobby}/`, // Pre-build the base API path
+    // DOM Element Cache
+    const elements = {
+        pageTitle: document.getElementById('page-title'),
+        searchBar: document.getElementById('search-bar'),
+        loadingIndicator: document.getElementById('loading-indicator'),
+        errorMessage: document.getElementById('error-message'),
+        indexContainer: document.getElementById('index-container'),
+        searchResults: document.getElementById('search-results'),
+        vnList: document.getElementById('vn-list'),
+        pagination: document.getElementById('pagination'),
+        detailsContainer: document.getElementById('details-container'),
+        vnDetails: document.getElementById('vn-details'),
+        backToIndex: document.getElementById('back-to-index'),
+    };
 
-        // Initialization
-        init() {
-          console.log('Alpine app initialized');
-          this.fetchPosts(`${this.apiBaseUrl}posts/index.json`); // Fetch initial page
-        },
+    // --- Utility Functions ---
 
-        // Methods
-        async fetchData(url) {
-          this.isLoading = true;
-          console.log(`Fetching: ${url}`);
-          try {
-            const response = await fetch(url);
-            if (!response.ok) {
-              throw new Error(`Network response was not ok: ${response.statusText} (URL: ${url})`);
-            }
-            const data = await response.json();
-            console.log('Data received:', data);
-            return data;
-          } catch (error) {
-            console.error('Fetch error:', error);
-            alert(`Failed to fetch data: ${error.message}`); // Basic user feedback
-            this.currentView = 'index'; // Go back to index on error?
-            return null; // Indicate failure
-          } finally {
-            this.isLoading = false;
-          }
-        },
+    function getUrlParameter(name) {
+      name = name.replace(/[\[\]]/g, '\\$&');
+      const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+      const results = regex.exec(window.location.href);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
 
-        async fetchPosts(url) {
-            const data = await this.fetchData(url);
-            if (data) {
-                this.posts = data.posts || [];
-                this.pagination = data.pagination || { currentPage: 1, totalPages: 1, nextPage: null, previousPage: null };
-                this.currentView = 'index';
-                this.pageTitle = 'Visual Novels';
-                window.scrollTo(0, 0); // Scroll to top on page change
-            }
-        },
-
-        async showDetails(link) {
-          this.currentDetails = null; // Clear previous details
-          const data = await this.fetchData(`${baseUrl}${link}`); // Use full link from data
-           if (data) {
-               this.currentDetails = data;
-               this.currentView = 'details';
-               this.pageTitle = data.title || 'Details';
-               window.scrollTo(0, 0);
-           }
-        },
-
-        async showDeveloper(link) {
-          this.currentDetails = null; // Clear previous details
-          const data = await this.fetchData(`${baseUrl}${link}`); // Use full link from data
-           if (data) {
-               this.currentDetails = data;
-               this.currentView = 'developer';
-               this.pageTitle = data.title || 'Developer Details';
-               window.scrollTo(0, 0);
-           }
-        },
-
-        goToPage(pageUrl) {
-           if (pageUrl) {
-               this.fetchPosts(`${baseUrl}${pageUrl}`); // Fetch the specific page index
-           }
-        },
-
-        goBackToIndex() {
-          this.currentView = 'index';
-          this.pageTitle = 'Visual Novels';
-          this.currentDetails = null; // Clear details when going back
-          // Optional: Re-fetch index if needed, but usually not necessary
-          // this.fetchPosts(`${this.apiBaseUrl}posts/index.json`);
-        },
-
-        async searchVisualNovels() {
-            if (this.searchTerm.length < 2) {
-                this.searchResults = [];
-                this.isLoadingSearch = false;
-                return;
-            }
-            this.isLoadingSearch = true;
-            console.log(`Searching for: ${this.searchTerm}`);
-            // *** IMPORTANT: Adjust the search endpoint ***
-            // This assumes your API has a search endpoint like `/vn/search.json?q=query`
-            // You NEED to replace this with your actual search API endpoint structure.
-            const searchUrl = `${this.apiBaseUrl}search.json?q=${encodeURIComponent(this.searchTerm)}`;
-
-            try {
-                // Note: Using a separate fetch here as it might have different structure/loading needs
-                const response = await fetch(searchUrl);
-                 if (!response.ok) {
-                    // Handle potential 404 or other errors if search endpoint doesn't exist or fails
-                    if (response.status === 404) {
-                        console.warn(`Search endpoint not found (404): ${searchUrl}`);
-                        this.searchResults = []; // Assume no results if endpoint missing
-                    } else {
-                        throw new Error(`Search network response was not ok: ${response.statusText}`);
-                    }
-                } else {
-                     const data = await response.json();
-                    // Assuming the search endpoint returns an array of results { title: '...', link: '...' }
-                    // Adjust based on your actual search API response format
-                    this.searchResults = data.results || data || []; // Adapt based on response structure
-                    console.log('Search results:', this.searchResults);
-                }
-
-            } catch (error) {
-                console.error('Search error:', error);
-                this.searchResults = []; // Clear results on error
-            } finally {
-                this.isLoadingSearch = false;
-            }
-        },
-
-        clearSearch() {
-            this.searchTerm = '';
-            this.searchResults = [];
-            this.isLoadingSearch = false;
-        }
-
+    function updateUrl(path) {
+      // Only push state if the path is different from the current one represented in the URL
+      const currentJsonParam = getUrlParameter('json');
+      if (path !== currentJsonParam) {
+          const newUrl = `${window.location.pathname}?json=${encodeURIComponent(path)}`;
+          // console.log("Pushing state:", path); // Debug log
+          window.history.pushState({ path: path }, '', newUrl);
       }
     }
+
+    // --- UI State Management ---
+
+    function showLoading() {
+        elements.loadingIndicator.style.display = 'block';
+        elements.errorMessage.style.display = 'none'; // Hide previous errors
+        elements.vnList.style.display = 'none'; // Hide content while loading
+        elements.pagination.style.display = 'none';
+        elements.vnDetails.style.display = 'none'; // Hide details content
+    }
+
+    function hideLoading() {
+        elements.loadingIndicator.style.display = 'none';
+    }
+
+    function showError(message) {
+        elements.errorMessage.textContent = `Error: ${message}`;
+        elements.errorMessage.style.display = 'block';
+        hideLoading(); // Hide loading indicator if error occurs
+        // Decide what content should be visible on error
+        elements.vnList.style.display = 'none';
+        elements.pagination.style.display = 'none';
+        elements.vnDetails.style.display = 'none';
+    }
+
+    function showIndexPage() {
+        elements.indexContainer.style.display = 'block';
+        elements.detailsContainer.style.display = 'none';
+        elements.pageTitle.textContent = 'Visual Novels';
+        // Ensure list and pagination are potentially visible (if not loading/error)
+        elements.vnList.style.display = 'block';
+        elements.pagination.style.display = 'block';
+        elements.vnDetails.style.display = 'none'; // Explicitly hide details content
+        elements.errorMessage.style.display = 'none'; // Hide errors when navigating back
+    }
+
+    function showDetailsPage(title = 'Details') {
+        elements.indexContainer.style.display = 'none';
+        elements.detailsContainer.style.display = 'block';
+        elements.pageTitle.textContent = title; // Use specific title
+        // Ensure details content is potentially visible (if not loading/error)
+        elements.vnDetails.style.display = 'block';
+        elements.errorMessage.style.display = 'none'; // Hide errors when navigating
+    }
+
+    // --- Data Fetching ---
+
+    async function fetchData(url) {
+        showLoading();
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok (${response.status} ${response.statusText})`);
+            }
+            const data = await response.json();
+            hideLoading();
+            return data;
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showError(error.message || 'Failed to fetch data.');
+            throw error; // Re-throw to allow calling function to know about the error
+        }
+    }
+
+    // --- Rendering Functions ---
+
+    function renderVisualNovelListItem(post) {
+        return `
+            <div class="vn-container">
+                <div class="vn-title">
+                    <a href="#" data-link="${post.link}">${post.title}</a>
+                </div>
+                <div class="vn-description">${post.description || 'No description available.'}</div>
+                ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+            </div>
+        `;
+    }
+
+    function renderVisualNovels(posts) {
+        if (!posts || posts.length === 0) {
+            elements.vnList.innerHTML = '<p>No visual novels found.</p>';
+            return;
+        }
+        elements.vnList.innerHTML = posts.map(renderVisualNovelListItem).join('');
+        // Add event listeners AFTER rendering
+        elements.vnList.querySelectorAll('.vn-title a').forEach(link => {
+            link.addEventListener('click', handleLinkClick);
+        });
+    }
+
+    function renderPagination(pagination) {
+        if (!pagination || pagination.totalPages <= 1) {
+            elements.pagination.innerHTML = ''; // No pagination needed for 0 or 1 pages
+            return;
+        }
+        elements.pagination.innerHTML = `
+            ${pagination.previousPage ? `<a href="#" data-link="${hobby}/posts/${pagination.previousPage}">Previous</a>` : '<span>Previous</span>'}
+            <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
+            ${pagination.nextPage ? `<a href="#" data-link="${hobby}/posts/${pagination.nextPage}">Next</a>` : '<span>Next</span>'}
+        `;
+        // Add event listeners AFTER rendering
+        elements.pagination.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', handleLinkClick);
+        });
+    }
+
+    function renderDetailsPage(post, type = 'vn') { // type can be 'vn' or 'developer'
+        const title = post.title || 'Details'; // Fallback title
+        elements.vnDetails.innerHTML = `
+            <div class="vn-title">${title}</div>
+            <div class="vn-description">${post.description || 'No description available.'}</div>
+            ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${title}">` : ''}
+
+            ${type === 'vn' && post.developers?.length ? `
+                <div class="vn-details-section vn-developers">
+                    <strong>Developers:</strong>
+                    <ul>${post.developers.map(dev => `
+                        <li><a href="#" data-link="${dev.link}">${dev.title}</a></li>
+                    `).join('')}</ul>
+                </div>
+            ` : ''}
+
+            ${type === 'vn' && post.tags?.length ? `
+                <div class="vn-details-section vn-tags">
+                    <strong>Tags:</strong>
+                    <ul>${post.tags.map(tag => `<li class="tag-item">${tag}</li>`).join('')}</ul>
+                </div>
+            ` : ''}
+
+            ${type === 'vn' && post.screenshots?.length ? `
+                <div class="vn-details-section vn-screenshots">
+                    <strong>Screenshots:</strong>
+                    <ul>${post.screenshots.map(ss => `<li><img src="${ss.url}" alt="Screenshot"></li>`).join('')}</ul>
+                </div>
+            ` : ''}
+
+            ${type === 'developer' && post.posts?.length ? `
+                <div class="vn-details-section vn-posts">
+                    <strong>Visual Novels by ${title}:</strong>
+                    ${post.posts.map(renderVisualNovelListItem).join('')}
+                </div>
+            ` : ''}
+        `;
+        showDetailsPage(title); // Update page title and visibility
+
+        // Add event listeners AFTER rendering for any links within the details
+        elements.vnDetails.querySelectorAll('a[data-link]').forEach(link => {
+            link.addEventListener('click', handleLinkClick);
+        });
+    }
+
+    // --- Event Handlers & Navigation Logic ---
+
+    function handleLinkClick(event) {
+        event.preventDefault();
+        const link = event.currentTarget.getAttribute('data-link');
+        if (link) {
+            // console.log("Link clicked, navigating to:", link); // Debug log
+            updateUrl(link);
+            navigateTo(link);
+        }
+    }
+
+    async function navigateTo(path) {
+        try {
+            const fullUrl = `${baseUrl}${path}`;
+            const data = await fetchData(fullUrl);
+
+            // Determine content type based on path structure (adjust regex if paths change)
+            if (path.includes('/posts/index') || path.includes('/posts/page')) {
+                // Index or Paginated List
+                renderVisualNovels(data.posts);
+                renderPagination(data.pagination);
+                showIndexPage();
+            } else if (path.startsWith(`${hobby}/developers/`)) {
+                // Developer Detail Page
+                renderDetailsPage(data, 'developer');
+            } else if (path.startsWith(`${hobby}/posts/`)) {
+                // Specific VN Detail Page (assuming structure)
+                renderDetailsPage(data, 'vn');
+            } else {
+                // Fallback or unknown path type - default to index?
+                console.warn("Unknown path structure:", path);
+                showError("Could not determine content type for this link.");
+                // Optionally, navigate to a known good state:
+                // updateUrl(`${hobby}/posts/index.json`);
+                // navigateTo(`${hobby}/posts/index.json`);
+            }
+             // Clear search results when navigating via links
+            elements.searchResults.innerHTML = '';
+            elements.searchBar.value = ''; // Clear search bar text
+
+        } catch (error) {
+            // Error already handled by showError in fetchData
+            console.error("Navigation failed for path:", path, error);
+        }
+    }
+
+    function handlePopState(event) {
+      const path = event.state?.path || getUrlParameter('json'); // Use state first, fallback to URL param
+      // console.log("Popstate event, path:", path); // Debug log
+      if (path) {
+          navigateTo(path);
+      } else {
+          // If no path in state or URL, default to index
+          const defaultPath = `${hobby}/posts/index.json`;
+          // console.log("Popstate: No path found, navigating to default:", defaultPath); // Debug log
+          // Update URL silently to reflect the default state if needed, then navigate
+          const currentUrl = `${window.location.pathname}?json=${encodeURIComponent(defaultPath)}`;
+          window.history.replaceState({ path: defaultPath }, '', currentUrl); // Use replaceState to not create extra history entry
+          navigateTo(defaultPath);
+      }
+    }
+
+    // --- Initialization ---
+
+    function initialize() {
+        // Attach static event listeners
+        elements.backToIndex.addEventListener('click', (e) => {
+            e.preventDefault();
+            const indexPath = `${hobby}/posts/index.json`;
+            updateUrl(indexPath);
+            navigateTo(indexPath);
+        });
+
+        window.addEventListener('popstate', handlePopState);
+
+        // Initial load logic
+        const initialPath = getUrlParameter('json');
+        if (initialPath) {
+            // console.log("Initial load with path:", initialPath); // Debug log
+            navigateTo(initialPath);
+        } else {
+            const defaultPath = `${hobby}/posts/index.json`;
+            // console.log("Initial load: No path, navigating to default:", defaultPath); // Debug log
+            updateUrl(defaultPath); // Set the initial URL correctly
+            navigateTo(defaultPath);
+        }
+
+        // Load and initialize search functionality (if search.js exists and is needed)
+        if (typeof initializeSearch === 'function') {
+             // Pass necessary elements/config if search.js needs them
+            initializeSearch({
+                searchBar: elements.searchBar,
+                resultsContainer: elements.searchResults,
+                baseUrl: baseUrl,
+                hobby: hobby,
+                handleLinkClick: handleLinkClick // Allow search results to use same navigation
+            });
+        } else {
+            console.warn("Search script ('/page/src/search.js') or initializeSearch function not found.");
+        }
+    }
+
+    // Start the application
+    document.addEventListener('DOMContentLoaded', initialize);
+
   </script>
-  <!-- Removed the old script block and the separate search.js script tag -->
+  <!-- Ensure the search script is loaded AFTER the main script or wrapped in its own DOMContentLoaded -->
+  <!-- It should define an `initializeSearch` function if it follows the pattern above -->
+  <script src="/page/src/search.js"></script>
 </body>
 </html>
