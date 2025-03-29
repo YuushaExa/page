@@ -174,7 +174,7 @@
         link.addEventListener('click', (e) => {
           e.preventDefault();
           const page = e.target.getAttribute('data-page');
-          const pageUrl = `${hobby}/posts/${page}`;
+          const pageUrl = `${page}`;
           updateUrl(pageUrl);
           fetchVisualNovels(`${baseUrl}${pageUrl}`);
         });
