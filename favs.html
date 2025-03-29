@@ -245,31 +245,42 @@
 
     // *** CHANGED: Renamed function ***
     // Fetch and render details for a specific item (Detail View)
+      // Fetch and render details for a specific item (Detail View)
     async function fetchAndRenderDetails(itemLink) {
       console.log("Fetching Item Details:", `${baseUrl}${itemLink}`); // Debug log
+      let pageTitle = 'Details'; // Default title
+
       try {
         const response = await fetch(`${baseUrl}${itemLink}`);
         if (!response.ok) {
-            // Handle potential 404 or other errors for detail files that might not exist
+            // Handle potential 404 or other errors
             if (response.status === 404) {
                  console.warn(`Detail file not found: ${itemLink}`);
-                 // Optionally show a specific message or default content
                  renderDetails(null); // Pass null to indicate not found
+                 pageTitle = 'Details Not Found'; // Set title for 404
             } else {
+                // For other network errors (500, etc.)
                 throw new Error(`Network response was not ok: ${response.statusText}`);
             }
+            // NOTE: itemDetails is NOT defined here
         } else {
+            // *** itemDetails is defined ONLY in this block ***
             const itemDetails = await response.json();
             renderDetails(itemDetails);
+            // Set title based on successfully fetched details
+            pageTitle = itemDetails?.title || 'Details Loaded (No Title)';
         }
-        showDetailsPage(); // Ensure the correct view is shown
-        // Update page title AFTER fetching, handle null case
-        document.getElementById('page-title').textContent = itemDetails?.title || 'Details Not Found';
+
+        showDetailsPage(); // Show the details section (even if empty/error)
+        // *** MOVED: Update page title *after* knowing the outcome ***
+        document.getElementById('page-title').textContent = pageTitle;
+
       } catch (error) {
         console.error('Error fetching item details:', error);
-         document.getElementById('vn-details').innerHTML = '<p>Error loading details.</p>';
-         showDetailsPage();
-         document.getElementById('page-title').textContent = 'Error'; // Update title on error
+        document.getElementById('vn-details').innerHTML = '<p>Error loading details.</p>';
+        showDetailsPage(); // Still show the details page structure with error message
+        // Set title specifically for catch block errors
+        document.getElementById('page-title').textContent = 'Error Loading Details';
       }
     }
 
