@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Novels</title>
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .vn-container {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    .vn-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .vn-title a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    .vn-title a:hover {
+      text-decoration: underline;
+    }
+    .vn-description {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .vn-image {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    .pagination {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .pagination a {
+      margin: 0 5px;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .pagination a.active {
+      font-weight: bold;
+      color: #000;
+    }
+    .vn-developers, .vn-tags, .vn-screenshots {
+      margin-bottom: 10px;
+    }
+    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .vn-developers li, .vn-tags li {
+      display: inline-block;
+      margin-right: 10px;
+      background-color: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 3px;
+    }
+    .vn-screenshots img {
+      max-width: 100px;
+      margin-right: 10px;
+    }
+    #details-container {
+      display: none;
+    }
+    #back-to-index {
+      display: block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .vn-post-image {
+      max-width: 50px;
+      height: auto;
+      margin-left: 10px;
+    }
+    [hx-history-elt] {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body
+  hx-history="true"
+  hx-history-elt="main"
+  hx-target="main"
+  hx-push-url="true"
+>
+  <header>
+    <h1 id="page-title">Visual Novels</h1>
+    <input 
+      type="text" 
+      id="search-bar" 
+      placeholder="Search Visual Novels..." 
+      style="width: 100%; padding: 10px; margin-bottom: 20px;"
+      hx-trigger="keyup changed delay:500ms"
+      hx-get="/search"
+      hx-target="#vn-list"
+      hx-swap="innerHTML"
+    >
+  </header>
+  
+  <main>
+    <!-- Index view (default) -->
+    <div id="index-container">
+      <div id="vn-list"
+        hx-get="/vn/list"
+        hx-trigger="load, vnListChanged from:body"
+      ></div>
+    </div>
+    
+    <!-- Detail view (hidden by default) -->
+    <div id="details-container" class="vn-container">
+      <div id="vn-details"></div>
+      <a href="#" id="back-to-index" hx-get="/vn/list" hx-target="#vn-list">Back to List</a>
+    </div>
+  </main>
+  
+  <footer>
+    2025
+  </footer>
+
+  <script>
+    // Handle navigation between views
+    document.addEventListener('htmx:afterSwap', function(evt) {
+      const detailPatterns = ['/vn/details/', '/developer/'];
+      
+      // Check if we're showing details or index
+      const isDetailView = detailPatterns.some(pattern => 
+        evt.detail.requestConfig.path.includes(pattern)
+      );
+      
+      if (isDetailView) {
+        // Show details view
+        document.getElementById('index-container').style.display = 'none';
+        document.getElementById('details-container').style.display = 'block';
+        document.getElementById('search-bar').style.display = 'none';
+        
+        // Update page title
+        const title = document.querySelector('#vn-details .vn-title')?.textContent;
+        if (title) {
+          document.getElementById('page-title').textContent = title;
+        }
+      } else {
+        // Show index view
+        document.getElementById('index-container').style.display = 'block';
+        document.getElementById('details-container').style.display = 'none';
+        document.getElementById('search-bar').style.display = 'block';
+        document.getElementById('page-title').textContent = 'Visual Novels';
+        
+        // Trigger a refresh of the list if needed
+        if (evt.detail.requestConfig.path === '/vn/list') {
+          document.body.dispatchEvent(new CustomEvent('vnListChanged'));
+        }
+      }
+    });
+    
+    // Handle back button navigation
+    window.addEventListener('popstate', function() {
+      // HTMX will handle the history navigation automatically
+    });
+  </script>
+</body>
+</html>
