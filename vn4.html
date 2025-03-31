@@ -112,7 +112,7 @@
     <!-- Index view (default) -->
     <div id="index-container">
       <div id="vn-list"
-        hx-get="/vn/list"
+        hx-get="/headless/vn/posts/index.json"
         hx-trigger="load, vnListChanged from:body"
       ></div>
     </div>
@@ -120,7 +120,7 @@
     <!-- Detail view (hidden by default) -->
     <div id="details-container" class="vn-container">
       <div id="vn-details"></div>
-      <a href="#" id="back-to-index" hx-get="/vn/list" hx-target="#vn-list">Back to List</a>
+      <a href="#" id="back-to-index" hx-get="/headless/vn/posts/index.json" hx-target="#vn-list">Back to List</a>
     </div>
   </main>
   
