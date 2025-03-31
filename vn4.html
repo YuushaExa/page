@@ -5,33 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
   <script src="https://unpkg.com/htmx.org@1.9.6"></script>
-  <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
     }
     .vn-container {
       border: 1px solid #ddd;
       padding: 15px;
       margin-bottom: 20px;
       border-radius: 5px;
-      display: flex;
-      gap: 20px;
-    }
-    .vn-image-container {
-      flex: 0 0 200px;
-    }
-    .vn-image {
-      max-width: 100%;
-      height: auto;
-      border-radius: 5px;
-    }
-    .vn-content {
-      flex: 1;
     }
     .vn-title {
       font-size: 24px;
@@ -42,11 +25,18 @@
       text-decoration: none;
       color: #007bff;
     }
+    .vn-title a:hover {
+      text-decoration: underline;
+    }
     .vn-description {
       font-size: 16px;
       color: #555;
       margin-bottom: 10px;
-      white-space: pre-line;
+    }
+    .vn-image {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
     }
     .pagination {
       margin-top: 20px;
@@ -61,258 +51,121 @@
       font-weight: bold;
       color: #000;
     }
-    .vn-developers, .vn-tags {
+    .vn-developers, .vn-tags, .vn-screenshots {
       margin-bottom: 10px;
     }
-    .vn-developers ul, .vn-tags ul {
+    .vn-developers ul, .vn-tags ul, .vn-screenshots ul {
       list-style-type: none;
       padding: 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
     }
     .vn-developers li, .vn-tags li {
+      display: inline-block;
+      margin-right: 10px;
       background-color: #f0f0f0;
       padding: 5px 10px;
       border-radius: 3px;
     }
-    #search-results {
-      margin-bottom: 20px;
+    .vn-screenshots img {
+      max-width: 100px;
+      margin-right: 10px;
     }
-    #back-button {
-      display: inline-block;
-      margin-bottom: 20px;
+    #details-container {
+      display: none;
+    }
+    #back-to-index {
+      display: block;
+      margin-top: 20px;
       text-decoration: none;
       color: #007bff;
-      padding: 5px 10px;
-      border: 1px solid #007bff;
-      border-radius: 4px;
     }
-    .loading {
-      opacity: 0.6;
-      pointer-events: none;
+    .vn-post-image {
+      max-width: 50px;
+      height: auto;
+      margin-left: 10px;
+    }
+    [hx-history-elt] {
+      cursor: pointer;
     }
   </style>
 </head>
 <body
   hx-history="true"
+  hx-history-elt="main"
   hx-target="main"
   hx-push-url="true"
 >
   <header>
-    <h1>Visual Novels</h1>
-    <input
-      type="text"
-      id="search"
-      name="search"
-      placeholder="Search visual novels..."
-      hx-get="https://yuushaexa.github.io/headless/vn/posts/index.json"
+    <h1 id="page-title">Visual Novels</h1>
+    <input 
+      type="text" 
+      id="search-bar" 
+      placeholder="Search Visual Novels..." 
+      style="width: 100%; padding: 10px; margin-bottom: 20px;"
       hx-trigger="keyup changed delay:500ms"
-      hx-target="#search-results"
+      hx-get="/search"
+      hx-target="#vn-list"
       hx-swap="innerHTML"
-      hx-indicator=".search-indicator"
     >
-    <span class="search-indicator htmx-indicator">Searching...</span>
-    <div id="search-results"></div>
   </header>
-
+  
   <main>
-    <!-- Initial content loaded via htmx -->
-    <div 
-      hx-get="https://yuushaexa.github.io/headless/vn/posts/index.json"
-      hx-trigger="load"
-      hx-swap="innerHTML"
-      hx-indicator=".main-indicator"
-    >
-      <div class="main-indicator htmx-indicator">Loading visual novels...</div>
+    <!-- Index view (default) -->
+    <div id="index-container">
+      <div id="vn-list"
+        hx-get="/vn/list"
+        hx-trigger="load, vnListChanged from:body"
+      ></div>
+    </div>
+    
+    <!-- Detail view (hidden by default) -->
+    <div id="details-container" class="vn-container">
+      <div id="vn-details"></div>
+      <a href="#" id="back-to-index" hx-get="/vn/list" hx-target="#vn-list">Back to List</a>
     </div>
   </main>
+  
+  <footer>
+    2025
+  </footer>
 
   <script>
-    // Handle JSON responses and render HTML
-    htmx.onLoad(function(content) {
-      // Process main index JSON
-      content.querySelectorAll('[hx-get*="index.json"], [hx-get*="page/"]').forEach(el => {
-        el.addEventListener('htmx:afterSwap', function(evt) {
-          if (evt.detail.xhr.responseText.startsWith('{')) {
-            const data = JSON.parse(evt.detail.xhr.responseText);
-            let html = '';
-            
-            // Render posts list
-            if (data.posts) {
-              html += '<div class="vn-list">';
-              data.posts.forEach(post => {
-                html += `
-                  <div class="vn-container" 
-                       hx-get="https://yuushaexa.github.io/headless/${post.link}"
-                       hx-trigger="click"
-                       hx-target="main"
-                       hx-swap="innerHTML"
-                       style="cursor: pointer;">
-                    ${post.image?.url ? `
-                    <div class="vn-image-container">
-                      <img class="vn-image" src="${post.image.url}" alt="${post.title}">
-                    </div>` : ''}
-                    <div class="vn-content">
-                      <h2 class="vn-title">${post.title}</h2>
-                    </div>
-                  </div>
-                `;
-              });
-              html += '</div>';
-              
-              // Render pagination
-              if (data.pagination) {
-                html += '<div class="pagination">';
-                if (data.pagination.previousPage) {
-                  html += `<a hx-get="https://yuushaexa.github.io/headless/${data.pagination.previousPage}"
-                             hx-target="main">Previous</a>`;
-                }
-                html += ` <span>Page ${data.pagination.currentPage} of ${data.pagination.totalPages}</span> `;
-                if (data.pagination.nextPage) {
-                  html += `<a hx-get="https://yuushaexa.github.io/headless/${data.pagination.nextPage}"
-                             hx-target="main">Next</a>`;
-                }
-                html += '</div>';
-              }
-            }
-            
-            evt.detail.target.innerHTML = html;
-          }
-        });
-      });
+    // Handle navigation between views
+    document.addEventListener('htmx:afterSwap', function(evt) {
+      const detailPatterns = ['/vn/details/', '/developer/'];
       
-      // Process individual VN JSON
-      content.querySelectorAll('[hx-get*="posts/"]').forEach(el => {
-        el.addEventListener('htmx:afterSwap', function(evt) {
-          if (evt.detail.xhr.responseText.startsWith('{')) {
-            const post = JSON.parse(evt.detail.xhr.responseText);
-            let html = `
-              <a id="back-button"
-                 hx-get="https://yuushaexa.github.io/headless/vn/posts/index.json"
-                 hx-target="main">← Back to list</a>
-              <div class="vn-container">
-                ${post.image?.url ? `
-                <div class="vn-image-container">
-                  <img class="vn-image" src="${post.image.url}" alt="${post.title}">
-                </div>` : ''}
-                <div class="vn-content">
-                  <h1 class="vn-title">${post.title}</h1>
-            `;
-            
-            if (post.developers && post.developers.length > 0) {
-              html += `<div class="vn-developers">
-                <strong>Developers:</strong>
-                <ul>`;
-              post.developers.forEach(dev => {
-                html += `<li
-                  hx-get="https://yuushaexa.github.io/headless/${dev.link}"
-                  hx-target="main"
-                  style="cursor: pointer;">${dev.title}</li>`;
-              });
-              html += `</ul></div>`;
-            }
-            
-            if (post.description) {
-              html += `<div class="vn-description">${post.description.replace(/\[url=(.+?)\](.+?)\[\/url\]/g, '<a href="$1" target="_blank">$2</a>')}</div>`;
-            }
-            
-            html += `</div></div>`;
-            evt.detail.target.innerHTML = html;
-          }
-        });
-      });
+      // Check if we're showing details or index
+      const isDetailView = detailPatterns.some(pattern => 
+        evt.detail.requestConfig.path.includes(pattern)
+      );
       
-      // Process developer JSON
-      content.querySelectorAll('[hx-get*="developers/"]').forEach(el => {
-        el.addEventListener('htmx:afterSwap', function(evt) {
-          if (evt.detail.xhr.responseText.startsWith('{')) {
-            const dev = JSON.parse(evt.detail.xhr.responseText);
-            let html = `
-              <a id="back-button"
-                 hx-get="https://yuushaexa.github.io/headless/vn/posts/index.json"
-                 hx-target="main">← Back to list</a>
-              <div class="vn-container">
-                ${dev.image?.url ? `
-                <div class="vn-image-container">
-                  <img class="vn-image" src="${dev.image.url}" alt="${dev.title}">
-                </div>` : ''}
-                <div class="vn-content">
-                  <h1 class="vn-title">${dev.title}</h1>
-            `;
-            
-            if (dev.description) {
-              html += `<div class="vn-description">${dev.description}</div>`;
-            }
-            
-            if (dev.posts && dev.posts.length > 0) {
-              html += `<h3>Visual Novels:</h3>
-                <div class="vn-list">`;
-              dev.posts.forEach(post => {
-                html += `
-                  <div class="vn-container" 
-                       hx-get="https://yuushaexa.github.io/headless/${post.link}"
-                       hx-trigger="click"
-                       hx-target="main"
-                       hx-swap="innerHTML"
-                       style="cursor: pointer;">
-                    ${post.image?.url ? `
-                    <div class="vn-image-container">
-                      <img class="vn-image" src="${post.image.url}" alt="${post.title}">
-                    </div>` : ''}
-                    <div class="vn-content">
-                      <h2 class="vn-title">${post.title}</h2>
-                    </div>
-                  </div>
-                `;
-              });
-              html += '</div>';
-            }
-            
-            html += `</div></div>`;
-            evt.detail.target.innerHTML = html;
-          }
-        });
-      });
+      if (isDetailView) {
+        // Show details view
+        document.getElementById('index-container').style.display = 'none';
+        document.getElementById('details-container').style.display = 'block';
+        document.getElementById('search-bar').style.display = 'none';
+        
+        // Update page title
+        const title = document.querySelector('#vn-details .vn-title')?.textContent;
+        if (title) {
+          document.getElementById('page-title').textContent = title;
+        }
+      } else {
+        // Show index view
+        document.getElementById('index-container').style.display = 'block';
+        document.getElementById('details-container').style.display = 'none';
+        document.getElementById('search-bar').style.display = 'block';
+        document.getElementById('page-title').textContent = 'Visual Novels';
+        
+        // Trigger a refresh of the list if needed
+        if (evt.detail.requestConfig.path === '/vn/list') {
+          document.body.dispatchEvent(new CustomEvent('vnListChanged'));
+        }
+      }
     });
     
-    // Simple search filtering
-    document.getElementById('search').addEventListener('keyup', function(e) {
-      const searchTerm = e.target.value.toLowerCase();
-      if (searchTerm.length > 2) {
-        fetch('https://yuushaexa.github.io/headless/vn/posts/index.json')
-          .then(response => response.json())
-          .then(data => {
-            const filtered = data.posts.filter(post => 
-              post.title.toLowerCase().includes(searchTerm)
-            );
-            
-            let html = '<div class="vn-list">';
-            filtered.forEach(post => {
-              html += `
-                <div class="vn-container" 
-                     hx-get="https://yuushaexa.github.io/headless/${post.link}"
-                     hx-trigger="click"
-                     hx-target="main"
-                     hx-swap="innerHTML"
-                     style="cursor: pointer;">
-                  ${post.image?.url ? `
-                  <div class="vn-image-container">
-                    <img class="vn-image" src="${post.image.url}" alt="${post.title}">
-                  </div>` : ''}
-                  <div class="vn-content">
-                    <h2 class="vn-title">${post.title}</h2>
-                  </div>
-                </div>
-              `;
-            });
-            html += '</div>';
-            
-            document.getElementById('search-results').innerHTML = html;
-          });
-      } else {
-        document.getElementById('search-results').innerHTML = '';
-      }
+    // Handle back button navigation
+    window.addEventListener('popstate', function() {
+      // HTMX will handle the history navigation automatically
     });
   </script>
 </body>
