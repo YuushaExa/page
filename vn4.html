@@ -108,14 +108,21 @@
     const hobby = 'vn';
 
     // Function to parse URL parameters
-    function getUrlParameter() {
-      return window.location.search.slice(1); // Removes the leading '?'
-
-    }
+   // Function to parse URL parameters and add .json if needed
+function getUrlParameter() {
+  const param = window.location.search.slice(1); // Removes the leading '?'
+  // Add .json if it's not already there and it's not empty
+  if (param && !param.endsWith('.json')) {
+    return `${param}.json`;
+  }
+  return param;
+}
 
     // Function to update URL without reloading
 function updateUrl(path) {
-  const newUrl = `${window.location.pathname}?${path}`;
+  // Remove .json from the path for display purposes
+  const cleanPath = path.replace(/\.json$/, '');
+  const newUrl = `${window.location.pathname}?${cleanPath}`;
   window.history.pushState({ path }, '', newUrl);
 }
     
@@ -301,41 +308,46 @@ function updateUrl(path) {
     });
 
     // Handle browser back/forward navigation
-    window.addEventListener('popstate', (event) => {
-      const jsonParam = getUrlParameter('json');
-      if (jsonParam) {
-        if (jsonParam.includes('/posts/index.json') || jsonParam === `${hobby}/posts/index.json`) {
-          fetchVisualNovels(`${baseUrl}${jsonParam}`);
-          showIndexPage();
-        } else if (jsonParam.includes('/posts/page')) {
-          fetchVisualNovels(`${baseUrl}${jsonParam}`);
-          showIndexPage();
-        } else {
-          fetchAndRenderDetails(jsonParam);
-        }
-      } else {
-        showIndexPage();
-      }
-    });
+   window.addEventListener('popstate', (event) => {
+  const jsonParam = getUrlParameter();
+  const fullPath = jsonParam.endsWith('.json') ? jsonParam : `${jsonParam}.json`;
+  
+  if (jsonParam) {
+    if (fullPath.includes('/posts/index.json') || fullPath === `${hobby}/posts/index.json`) {
+      fetchVisualNovels(`${baseUrl}${fullPath}`);
+      showIndexPage();
+    } else if (fullPath.includes('/posts/page')) {
+      fetchVisualNovels(`${baseUrl}${fullPath}`);
+      showIndexPage();
+    } else {
+      fetchAndRenderDetails(fullPath);
+    }
+  } else {
+    showIndexPage();
+  }
+});
 
     // Fetch initial data on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      const jsonParam = getUrlParameter('json');
-      
-      if (jsonParam) {
-        if (jsonParam.includes('/posts/index.json') || jsonParam === `${hobby}/posts/index.json`) {
-          fetchVisualNovels(`${baseUrl}${jsonParam}`);
-        } else if (jsonParam.includes('/posts/page')) {
-          fetchVisualNovels(`${baseUrl}${jsonParam}`);
-        } else {
-          fetchAndRenderDetails(jsonParam);
-        }
-      } else {
-        // Default to index if no parameter
-        fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
-        updateUrl(`${hobby}/posts/index.json`);
-      }
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  const jsonParam = getUrlParameter();
+  
+  if (jsonParam) {
+    const fullPath = jsonParam.endsWith('.json') ? jsonParam : `${jsonParam}.json`;
+    
+    if (fullPath.includes('/posts/index.json') || fullPath === `${hobby}/posts/index.json`) {
+      fetchVisualNovels(`${baseUrl}${fullPath}`);
+    } else if (fullPath.includes('/posts/page')) {
+      fetchVisualNovels(`${baseUrl}${fullPath}`);
+    } else {
+      fetchAndRenderDetails(fullPath);
+    }
+  } else {
+    // Default to index if no parameter
+    const defaultPath = `${hobby}/posts/index.json`;
+    fetchVisualNovels(`${baseUrl}${defaultPath}`);
+    updateUrl(defaultPath);
+  }
+});
   </script>
   <script src="/page/src/search.js"></script>
 </body>
