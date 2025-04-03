@@ -109,20 +109,15 @@
 
     // Function to parse URL parameters
 function getUrlParameter() {
-  const param = window.location.search.slice(1); // Removes the leading '?'
-  // Add .json if it's not already there and it's not empty
-  if (param && !param.endsWith('.json')) {
-    return `${param}.json`;
-  }
-  return param;
+  return window.location.search.slice(1); // Just returns what's after '?'
 }
 
     // Function to update URL without reloading
 function updateUrl(path) {
-  // Remove .json from the path for display purposes
+  // Store the original path in state, but display clean URL
   const cleanPath = path.replace(/\.json$/, '');
   const newUrl = `${window.location.pathname}?${cleanPath}`;
-  window.history.pushState({ path }, '', newUrl);
+  window.history.pushState({ rawPath: path }, '', newUrl);
 }
     
     // Fetch and display visual novels
@@ -307,43 +302,49 @@ function updateUrl(path) {
     });
 
     // Handle browser back/forward navigation
- window.addEventListener('popstate', (event) => {
-  const jsonParam = getUrlParameter();
-  const fullPath = jsonParam.endsWith('.json') ? jsonParam : `${jsonParam}.json`;
+window.addEventListener('popstate', (event) => {
+  // Use the raw path from state if available, otherwise fall back to URL
+  const rawPath = event.state?.rawPath || getUrlParameter();
   
-  if (jsonParam) {
-    if (fullPath.includes('/posts/index.json') || fullPath === `${hobby}/posts/index.json`) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
+  if (rawPath) {
+    if (rawPath.includes('/posts/index.json') || rawPath === `${hobby}/posts/index.json`) {
+      fetchVisualNovels(`${baseUrl}${rawPath}`);
       showIndexPage();
-    } else if (fullPath.includes('/posts/page')) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
+    } else if (rawPath.includes('/posts/page')) {
+      fetchVisualNovels(`${baseUrl}${rawPath}`);
       showIndexPage();
     } else {
-      fetchAndRenderDetails(fullPath);
-    }
-  } else {
-    showIndexPage();
-  }
-});
-
-    // Fetch initial data on page load
-document.addEventListener('DOMContentLoaded', () => {
-  const jsonParam = getUrlParameter();
-  if (jsonParam) {
-    const fullPath = jsonParam.endsWith('.json') ? jsonParam : `${jsonParam}.json`;
-    
-    if (fullPath.includes('/posts/index.json') || fullPath === `${hobby}/posts/index.json`) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
-    } else if (fullPath.includes('/posts/page')) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
-    } else {
-      fetchAndRenderDetails(fullPath);
+      fetchAndRenderDetails(rawPath);
     }
   } else {
     // Default to index if no parameter
     const defaultPath = `${hobby}/posts/index.json`;
     fetchVisualNovels(`${baseUrl}${defaultPath}`);
     updateUrl(defaultPath);
+  }
+});
+
+    // Fetch initial data on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const jsonParam = getUrlParameter();
+  let initialPath = jsonParam;
+  
+  if (!jsonParam) {
+    initialPath = `${hobby}/posts/index.json`;
+  } else if (!jsonParam.endsWith('.json')) {
+    initialPath = `${jsonParam}.json`;
+  }
+
+  // Store the initial state
+  history.replaceState({ rawPath: initialPath }, '', 
+    `${window.location.pathname}?${initialPath.replace(/\.json$/, '')}`);
+
+  if (initialPath.includes('/posts/index.json') || initialPath === `${hobby}/posts/index.json`) {
+    fetchVisualNovels(`${baseUrl}${initialPath}`);
+  } else if (initialPath.includes('/posts/page')) {
+    fetchVisualNovels(`${baseUrl}${initialPath}`);
+  } else {
+    fetchAndRenderDetails(initialPath);
   }
 });
   </script>
