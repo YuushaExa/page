@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Novels</title>
-  <!-- Include Wouter -->
-  <script src="https://unpkg.com/wouter"></script>
+  <!-- Include Wouter from CDN -->
+  <script src="https://unpkg.com/wouter@latest/dist/wouter.js"></script>
   <style>
+    /* Your existing CSS styles remain unchanged */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -67,27 +68,26 @@
       border-radius: 3px;
     }
     .vn-screenshots img {
-      max-width: 100px; /* Adjusted for better display in list */
-      height: auto;     /* Keep aspect ratio */
+      max-width: 100px;
+      height: auto;
       margin-right: 10px;
-      vertical-align: middle; /* Align images nicely if they wrap */
+      vertical-align: middle;
     }
-    /* Ensure screenshot list items are inline blocks for horizontal layout */
     .vn-screenshots ul li {
         display: inline-block;
-        margin-bottom: 5px; /* Add some space if they wrap */
+        margin-bottom: 5px;
     }
     #details-container {
-      display: none; /* Hide details by default */
+      display: none;
     }
     #back-to-index {
       display: block;
       margin-top: 20px;
       text-decoration: none;
       color: #007bff;
-      cursor: pointer; /* Indicate it's clickable */
+      cursor: pointer;
     }
-    .vn-post-image { /* Style seems unused in the provided HTML, keeping just in case */
+    .vn-post-image {
       max-width: 50px;
       height: auto;
       margin-left: 10px;
@@ -113,314 +113,278 @@
   <footer>
     2025
   </footer>
+  
+  <!-- Load search.js first -->
+  <script src="/page/src/search.js"></script>
+  
   <script>
-    const { navigate, matcher } = wouter; // Get Wouter functions
-
-    const baseUrl = 'https://yuushaexa.github.io/headless/';
-    const hobby = 'vn'; // Used to construct initial/API paths
-
-    // --- UI State Management ---
-    function showIndexPage() {
-      document.getElementById('index-container').style.display = 'block';
-      document.getElementById('details-container').style.display = 'none';
-      document.getElementById('page-title').textContent = 'Visual Novels';
-      document.getElementById('search-results').innerHTML = ''; // Clear search results when showing index
-      document.getElementById('search-bar').style.display = 'block'; // Show search bar
-    }
-
-    function showDetailsPage() {
-      document.getElementById('index-container').style.display = 'none';
-      document.getElementById('details-container').style.display = 'block';
-      document.getElementById('page-title').textContent = 'Details';
-       document.getElementById('search-bar').style.display = 'none'; // Hide search bar on details
-    }
-
-    // --- Data Fetching ---
-    async function fetchData(apiPath) {
-        // console.log(`Fetching: ${baseUrl}${apiPath}`); // Debug fetch URL
-        try {
-            const response = await fetch(`${baseUrl}${apiPath}`);
-            if (!response.ok) {
-                throw new Error(`Network response was not ok for ${apiPath}: ${response.statusText}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            // Display error to user?
-            document.getElementById('vn-list').innerHTML = `<p style="color: red;">Error loading data. Please try again later.</p>`;
-            document.getElementById('vn-details').innerHTML = `<p style="color: red;">Error loading details. Please try again later.</p>`;
-            return null; // Indicate failure
-        }
-    }
-
-    // --- Rendering Functions ---
-
-    // Render visual novel list items
-    function renderVisualNovels(posts) {
-      const vnList = document.getElementById('vn-list');
-      if (!posts || posts.length === 0) {
-        vnList.innerHTML = '<p>No visual novels found.</p>';
+    // Wait for Wouter to be loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if wouter is available
+      if (typeof wouter === 'undefined') {
+        console.error('Wouter is not loaded');
         return;
       }
-      vnList.innerHTML = posts.map(post => {
-        // Construct the link path for Wouter (relative to base)
-        const detailPath = `/vn/${post.link}`;
-        return `
-            <div class="vn-container">
-              <div class="vn-title">
-                <!-- Use href for semantic correctness and Wouter navigation -->
-                <a href="${detailPath}" data-internal-link>${post.title}</a>
-              </div>
-              <div class="vn-description">${post.description || 'No description.'}</div>
-              ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-            </div>
-        `;
-        }).join('');
+      
+      const { navigate, matcher } = wouter;
 
-      attachLinkListeners(vnList); // Attach listeners after rendering
-    }
+      const baseUrl = 'https://yuushaexa.github.io/headless/';
+      const hobby = 'vn';
 
-    // Render pagination controls
-    function renderPagination(pagination) {
-      const paginationContainer = document.getElementById('pagination');
-      if (!pagination || pagination.totalPages <= 1) {
-          paginationContainer.innerHTML = ''; // No pagination needed for 0 or 1 pages
+      // --- UI State Management ---
+      function showIndexPage() {
+        document.getElementById('index-container').style.display = 'block';
+        document.getElementById('details-container').style.display = 'none';
+        document.getElementById('page-title').textContent = 'Visual Novels';
+        document.getElementById('search-results').innerHTML = '';
+        document.getElementById('search-bar').style.display = 'block';
+      }
+
+      function showDetailsPage() {
+        document.getElementById('index-container').style.display = 'none';
+        document.getElementById('details-container').style.display = 'block';
+        document.getElementById('page-title').textContent = 'Details';
+        document.getElementById('search-bar').style.display = 'none';
+      }
+
+      // --- Data Fetching ---
+      async function fetchData(apiPath) {
+          try {
+              const response = await fetch(`${baseUrl}${apiPath}`);
+              if (!response.ok) {
+                  throw new Error(`Network response was not ok for ${apiPath}: ${response.statusText}`);
+              }
+              return await response.json();
+          } catch (error) {
+              console.error('Error fetching data:', error);
+              document.getElementById('vn-list').innerHTML = `<p style="color: red;">Error loading data. Please try again later.</p>`;
+              document.getElementById('vn-details').innerHTML = `<p style="color: red;">Error loading details. Please try again later.</p>`;
+              return null;
+          }
+      }
+
+      // --- Rendering Functions ---
+      function renderVisualNovels(posts) {
+        const vnList = document.getElementById('vn-list');
+        if (!posts || posts.length === 0) {
+          vnList.innerHTML = '<p>No visual novels found.</p>';
           return;
-      }
-
-      // Ensure currentPage is within bounds
-      const currentPage = Math.max(1, Math.min(pagination.currentPage, pagination.totalPages));
-
-      let html = '';
-      // Previous Page Link
-      if (pagination.previousPage) {
-        const prevPath = pagination.previousPage.startsWith(`${hobby}/posts/index.json`)
-            ? `/` // Link to root for page 1 index
-            : `/page/${pagination.previousPage.match(/page\/(\d+)/)[1]}`; // Extract page number
-        html += `<a href="${prevPath}" data-internal-link>Previous</a> `;
-      } else {
-          html += `<span style="color: #ccc;">Previous</span> `; // Disabled look
-      }
-
-      // Page Number Info
-      html += `<span>Page ${currentPage} of ${pagination.totalPages}</span>`;
-
-      // Next Page Link
-      if (pagination.nextPage) {
-        const nextPageNumber = pagination.nextPage.match(/page\/(\d+)/)[1]; // Extract page number
-        const nextPath = `/page/${nextPageNumber}`;
-        html += ` <a href="${nextPath}" data-internal-link>Next</a>`;
-      } else {
-          html += ` <span style="color: #ccc;">Next</span>`; // Disabled look
-      }
-
-
-      paginationContainer.innerHTML = html;
-      attachLinkListeners(paginationContainer); // Attach listeners after rendering
-    }
-
-    // Render details for a specific visual novel
-    function renderDetails(post) {
-      const detailsContainer = document.getElementById('vn-details');
-      if (!post) {
-          detailsContainer.innerHTML = '<p>Could not load details.</p>';
-          return;
-      }
-      detailsContainer.innerHTML = `
-        <div class="vn-title">${post.title}</div>
-        <div class="vn-description">${post.description || 'No description available.'}</div>
-        ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-        ${post.developers?.length ? `
-          <div class="vn-developers">
-            <strong>Developers:</strong>
-            <ul>${post.developers.map(dev => {
-              const devPath = `/developer/${dev.link}`;
-              return `<li><a href="${devPath}" data-internal-link>${dev.title}</a></li>`;
-            }).join('')}</ul>
-          </div>
-        ` : ''}
-        ${post.tags?.length ? `
-          <div class="vn-tags">
-            <strong>Tags:</strong>
-            <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
-          </div>
-        ` : ''}
-        ${post.screenshots?.length ? `
-          <div class="vn-screenshots">
-            <strong>Screenshots:</strong>
-            <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
-          </div>
-        ` : ''}
-      `;
-      attachLinkListeners(detailsContainer); // Attach listeners after rendering
-    }
-
-    // Render developer details page
-    function renderDeveloperDetails(developer) {
-      const detailsContainer = document.getElementById('vn-details');
-       if (!developer) {
-          detailsContainer.innerHTML = '<p>Could not load developer details.</p>';
-          return;
-      }
-      detailsContainer.innerHTML = `
-        <div class="vn-title">${developer.title}</div>
-        <div class="vn-description">${developer.description || 'No description available.'}</div>
-        ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
-        ${developer.posts?.length ? `
-          <div class="vn-posts">
-            <strong>Visual Novels:</strong>
-            ${developer.posts.map(post => {
-              const vnPath = `/vn/${post.link}`;
-              return `
-                <div class="vn-container">
-                  <div class="vn-title">
-                    <a href="${vnPath}" data-internal-link>${post.title}</a>
-                  </div>
-                  <div class="vn-description">${post.description || 'No description.'}</div>
-                  ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-                </div>
-              `;
-            }).join('')}
-          </div>
-        ` : ''}
-      `;
-      attachLinkListeners(detailsContainer); // Attach listeners after rendering
-    }
-
-
-    // --- Route Handlers ---
-
-    async function handleIndexRoute(page = 1) {
-      // console.log(`Handling Index Route, Page: ${page}`);
-      showIndexPage();
-      const apiPath = page === 1 ? `${hobby}/posts/index.json` : `${hobby}/posts/page/${page}.json`;
-      const data = await fetchData(apiPath);
-      if (data) {
-          renderVisualNovels(data.posts);
-          renderPagination(data.pagination);
-      } else {
-          // Error handled in fetchData, maybe clear list/pagination?
-          document.getElementById('vn-list').innerHTML = '<p>Failed to load visual novels.</p>';
-          document.getElementById('pagination').innerHTML = '';
-      }
-    }
-
-    async function handleVnDetailsRoute(params) {
-       // The path might contain slashes, join them back. API expects the original path.
-      const vnApiPath = params['*'].join('/'); // Reconstruct the API path from matched segments
-      // console.log(`Handling VN Details Route, Path: ${vnApiPath}`);
-      showDetailsPage();
-      document.getElementById('vn-details').innerHTML = '<p>Loading details...</p>'; // Loading indicator
-      const vnDetails = await fetchData(vnApiPath);
-       if (vnDetails) {
-            renderDetails(vnDetails);
-            document.getElementById('page-title').textContent = vnDetails.title || 'Details'; // Update title
-       } else {
-            document.getElementById('vn-details').innerHTML = '<p>Failed to load visual novel details.</p>';
-            document.getElementById('page-title').textContent = 'Error';
-       }
-    }
-
-    async function handleDeveloperDetailsRoute(params) {
-      const devApiPath = params['*'].join('/'); // Reconstruct the API path
-      // console.log(`Handling Developer Details Route, Path: ${devApiPath}`);
-      showDetailsPage();
-      document.getElementById('vn-details').innerHTML = '<p>Loading developer details...</p>'; // Loading indicator
-      const devDetails = await fetchData(devApiPath);
-      if (devDetails) {
-          renderDeveloperDetails(devDetails);
-          document.getElementById('page-title').textContent = devDetails.title || 'Developer Details'; // Update title
-      } else {
-          document.getElementById('vn-details').innerHTML = '<p>Failed to load developer details.</p>';
-           document.getElementById('page-title').textContent = 'Error';
-      }
-    }
-
-    // --- Routing Logic ---
-
-    // Define routes using patterns Wouter's matcher understands
-    // Order matters: more specific routes should come first if overlap is possible.
-    const routes = [
-        { pattern: '/', handler: () => handleIndexRoute(1) },
-        { pattern: '/page/:pageNumber', handler: (params) => handleIndexRoute(parseInt(params.pageNumber, 10)) },
-        // Use '*' to capture the rest of the path, potentially containing slashes
-        { pattern: '/vn/:*', handler: handleVnDetailsRoute },
-        { pattern: '/developer/:*', handler: handleDeveloperDetailsRoute }
-    ];
-
-    function route(path) {
-        // console.log(`Routing path: ${path}`); // Debug current path
-        for (const route of routes) {
-            const [match, params] = matcher(route.pattern, path);
-            if (match) {
-                // console.log(`Matched route: ${route.pattern}`, params); // Debug match
-                route.handler(params);
-                return; // Stop checking once a match is found
-            }
         }
-        // Fallback for unmatched routes (e.g., show 404 or redirect to index)
-        console.warn(`No route matched for path: ${path}`);
-        // Optionally navigate to home or show a 404 message
-        handleIndexRoute(1); // Default to index if no route matches
-    }
+        vnList.innerHTML = posts.map(post => {
+          const detailPath = `/vn/${post.link}`;
+          return `
+              <div class="vn-container">
+                <div class="vn-title">
+                  <a href="${detailPath}" data-internal-link>${post.title}</a>
+                </div>
+                <div class="vn-description">${post.description || 'No description.'}</div>
+                ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+              </div>
+          `;
+          }).join('');
 
-    // --- Event Listeners ---
+        attachLinkListeners(vnList);
+      }
 
-    // Delegate event listener for internal links
-    function attachLinkListeners(container) {
-        container.querySelectorAll('a[data-internal-link]').forEach(link => {
-            // Remove existing listeners to prevent duplicates if re-rendering
-            link.replaceWith(link.cloneNode(true)); // Simple way to remove listeners
-        });
-        // Re-query and add new listener
-        container.querySelectorAll('a[data-internal-link]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default browser navigation
-                const path = link.getAttribute('href');
-                navigate(path); // Use Wouter's navigate function
-                route(path);    // Manually trigger routing logic for the new path
-            });
-        });
-    }
+      function renderPagination(pagination) {
+        const paginationContainer = document.getElementById('pagination');
+        if (!pagination || pagination.totalPages <= 1) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
 
-    // Back to index link
-    document.getElementById('back-to-index').addEventListener('click', (e) => {
-      e.preventDefault();
-      navigate('/'); // Navigate to the root/index page
-      route('/');   // Trigger routing for index
-    });
+        const currentPage = Math.max(1, Math.min(pagination.currentPage, pagination.totalPages));
 
-    // Handle browser back/forward navigation
-    window.addEventListener('popstate', () => {
-      // console.log("Popstate triggered:", window.location.pathname); // Debug popstate
-      route(window.location.pathname); // Route based on the new path
-    });
+        let html = '';
+        if (pagination.previousPage) {
+          const prevPath = pagination.previousPage.startsWith(`${hobby}/posts/index.json`)
+              ? `/`
+              : `/page/${pagination.previousPage.match(/page\/(\d+)/)[1]}`;
+          html += `<a href="${prevPath}" data-internal-link>Previous</a> `;
+        } else {
+            html += `<span style="color: #ccc;">Previous</span> `;
+        }
 
-    // --- Initial Load ---
-    document.addEventListener('DOMContentLoaded', () => {
-      // console.log("DOM Loaded, initial path:", window.location.pathname); // Debug initial load
-      // Attach initial listeners to static elements if needed (like back button)
+        html += `<span>Page ${currentPage} of ${pagination.totalPages}</span>`;
 
-      // Initial routing based on the current URL path
+        if (pagination.nextPage) {
+          const nextPageNumber = pagination.nextPage.match(/page\/(\d+)/)[1];
+          const nextPath = `/page/${nextPageNumber}`;
+          html += ` <a href="${nextPath}" data-internal-link>Next</a>`;
+        } else {
+            html += ` <span style="color: #ccc;">Next</span>`;
+        }
+
+        paginationContainer.innerHTML = html;
+        attachLinkListeners(paginationContainer);
+      }
+
+      function renderDetails(post) {
+        const detailsContainer = document.getElementById('vn-details');
+        if (!post) {
+            detailsContainer.innerHTML = '<p>Could not load details.</p>';
+            return;
+        }
+        detailsContainer.innerHTML = `
+          <div class="vn-title">${post.title}</div>
+          <div class="vn-description">${post.description || 'No description available.'}</div>
+          ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+          ${post.developers?.length ? `
+            <div class="vn-developers">
+              <strong>Developers:</strong>
+              <ul>${post.developers.map(dev => {
+                const devPath = `/developer/${dev.link}`;
+                return `<li><a href="${devPath}" data-internal-link>${dev.title}</a></li>`;
+              }).join('')}</ul>
+            </div>
+          ` : ''}
+          ${post.tags?.length ? `
+            <div class="vn-tags">
+              <strong>Tags:</strong>
+              <ul>${post.tags.map(tag => `<li>${tag}</li>`).join('')}</ul>
+            </div>
+          ` : ''}
+          ${post.screenshots?.length ? `
+            <div class="vn-screenshots">
+              <strong>Screenshots:</strong>
+              <ul>${post.screenshots.map(screenshot => `<li><img src="${screenshot.url}" alt="Screenshot"></li>`).join('')}</ul>
+            </div>
+          ` : ''}
+        `;
+        attachLinkListeners(detailsContainer);
+      }
+
+      function renderDeveloperDetails(developer) {
+        const detailsContainer = document.getElementById('vn-details');
+         if (!developer) {
+            detailsContainer.innerHTML = '<p>Could not load developer details.</p>';
+            return;
+        }
+        detailsContainer.innerHTML = `
+          <div class="vn-title">${developer.title}</div>
+          <div class="vn-description">${developer.description || 'No description available.'}</div>
+          ${developer.image?.url ? `<img class="vn-image" src="${developer.image.url}" alt="${developer.title}">` : ''}
+          ${developer.posts?.length ? `
+            <div class="vn-posts">
+              <strong>Visual Novels:</strong>
+              ${developer.posts.map(post => {
+                const vnPath = `/vn/${post.link}`;
+                return `
+                  <div class="vn-container">
+                    <div class="vn-title">
+                      <a href="${vnPath}" data-internal-link>${post.title}</a>
+                    </div>
+                    <div class="vn-description">${post.description || 'No description.'}</div>
+                    ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
+        `;
+        attachLinkListeners(detailsContainer);
+      }
+
+      // --- Route Handlers ---
+      async function handleIndexRoute(page = 1) {
+        showIndexPage();
+        const apiPath = page === 1 ? `${hobby}/posts/index.json` : `${hobby}/posts/page/${page}.json`;
+        const data = await fetchData(apiPath);
+        if (data) {
+            renderVisualNovels(data.posts);
+            renderPagination(data.pagination);
+        } else {
+            document.getElementById('vn-list').innerHTML = '<p>Failed to load visual novels.</p>';
+            document.getElementById('pagination').innerHTML = '';
+        }
+      }
+
+      async function handleVnDetailsRoute(params) {
+        const vnApiPath = params['*'].join('/');
+        showDetailsPage();
+        document.getElementById('vn-details').innerHTML = '<p>Loading details...</p>';
+        const vnDetails = await fetchData(vnApiPath);
+         if (vnDetails) {
+              renderDetails(vnDetails);
+              document.getElementById('page-title').textContent = vnDetails.title || 'Details';
+         } else {
+              document.getElementById('vn-details').innerHTML = '<p>Failed to load visual novel details.</p>';
+              document.getElementById('page-title').textContent = 'Error';
+         }
+      }
+
+      async function handleDeveloperDetailsRoute(params) {
+        const devApiPath = params['*'].join('/');
+        showDetailsPage();
+        document.getElementById('vn-details').innerHTML = '<p>Loading developer details...</p>';
+        const devDetails = await fetchData(devApiPath);
+        if (devDetails) {
+            renderDeveloperDetails(devDetails);
+            document.getElementById('page-title').textContent = devDetails.title || 'Developer Details';
+        } else {
+            document.getElementById('vn-details').innerHTML = '<p>Failed to load developer details.</p>';
+             document.getElementById('page-title').textContent = 'Error';
+        }
+      }
+
+      // --- Routing Logic ---
+      const routes = [
+          { pattern: '/', handler: () => handleIndexRoute(1) },
+          { pattern: '/page/:pageNumber', handler: (params) => handleIndexRoute(parseInt(params.pageNumber, 10)) },
+          { pattern: '/vn/:*', handler: handleVnDetailsRoute },
+          { pattern: '/developer/:*', handler: handleDeveloperDetailsRoute }
+      ];
+
+      function route(path) {
+          for (const route of routes) {
+              const [match, params] = matcher(route.pattern, path);
+              if (match) {
+                  route.handler(params);
+                  return;
+              }
+          }
+          console.warn(`No route matched for path: ${path}`);
+          handleIndexRoute(1);
+      }
+
+      // --- Event Listeners ---
+      function attachLinkListeners(container) {
+          container.querySelectorAll('a[data-internal-link]').forEach(link => {
+              link.replaceWith(link.cloneNode(true));
+          });
+          container.querySelectorAll('a[data-internal-link]').forEach(link => {
+              link.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  const path = link.getAttribute('href');
+                  navigate(path);
+                  route(path);
+              });
+          });
+      }
+
+      document.getElementById('back-to-index').addEventListener('click', (e) => {
+        e.preventDefault();
+        navigate('/');
+        route('/');
+      });
+
+      window.addEventListener('popstate', () => {
+        route(window.location.pathname);
+      });
+
+      // Initial setup
       route(window.location.pathname);
-
-      // Re-attach listeners to dynamically loaded content containers initially
-      // (though they are empty now, this ensures the logic is in place)
       attachLinkListeners(document.getElementById('vn-list'));
       attachLinkListeners(document.getElementById('pagination'));
       attachLinkListeners(document.getElementById('vn-details'));
 
-      // Setup Search (using the separate search.js)
-       if (typeof setupSearch === 'function') {
-           setupSearch(baseUrl, hobby, navigate, route); // Pass navigate/route if search needs to trigger navigation
-       } else {
-           console.warn('search.js or setupSearch function not found.');
-       }
+      // Setup Search if available
+      if (typeof setupSearch === 'function') {
+          setupSearch(baseUrl, hobby, navigate, route);
+      } else {
+          console.warn('search.js or setupSearch function not found.');
+      }
     });
-
   </script>
-  <!-- Make sure search.js is loaded AFTER the main script -->
-  <!-- and modify it to accept navigate/route if needed -->
-  <script src="/page/src/search.js"></script>
 </body>
 </html>
