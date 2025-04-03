@@ -114,10 +114,16 @@ function getUrlParameter() {
 
     // Function to update URL without reloading
 function updateUrl(path) {
-  // Store the original path in state, but display clean URL
-  const cleanPath = path.replace(/\.json$/, '');
+  // Ensure path ends with .json for API requests
+  const apiPath = path.endsWith('.json') ? path : `${path}.json`;
+  // Create clean path for display
+  const cleanPath = apiPath.replace(/\.json$/, '');
   const newUrl = `${window.location.pathname}?${cleanPath}`;
-  window.history.pushState({ rawPath: path }, '', newUrl);
+  // Store both paths in state
+  window.history.pushState({ 
+    rawPath: apiPath,
+    cleanPath: cleanPath
+  }, '', newUrl);
 }
     
     // Fetch and display visual novels
@@ -167,16 +173,16 @@ function updateUrl(path) {
       `;
 
       // Add event listeners to pagination links
-      document.querySelectorAll('#pagination a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const page = e.target.getAttribute('data-page');
-          const pageUrl = `${page}`;
-          updateUrl(pageUrl);
-          fetchVisualNovels(`${baseUrl}${pageUrl}`);
-        });
-      });
+document.querySelectorAll('#pagination a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const page = e.target.getAttribute('data-page');
+    updateUrl(page);  // This will automatically handle the .json conversion
+    fetchVisualNovels(`${baseUrl}${page}.json`);  // Ensure .json is added for the API call
+  });
+});
     }
+
 
     // Fetch and render details for a specific visual novel
     async function fetchAndRenderDetails(vnLink) {
@@ -303,43 +309,43 @@ function updateUrl(path) {
 
     // Handle browser back/forward navigation
 window.addEventListener('popstate', (event) => {
-  // Use the raw path from state if available, otherwise fall back to URL
-  const rawPath = event.state?.rawPath || getUrlParameter();
+  // Prefer the stored rawPath, but fall back to reconstructing from URL
+  const rawPath = event.state?.rawPath || 
+                 (window.location.search.slice(1) + '.json');
   
-  if (rawPath) {
-    if (rawPath.includes('/posts/index.json') || rawPath === `${hobby}/posts/index.json`) {
-      fetchVisualNovels(`${baseUrl}${rawPath}`);
-      showIndexPage();
-    } else if (rawPath.includes('/posts/page')) {
-      fetchVisualNovels(`${baseUrl}${rawPath}`);
-      showIndexPage();
-    } else {
-      fetchAndRenderDetails(rawPath);
-    }
-  } else {
-    // Default to index if no parameter
+  if (!rawPath || rawPath === `${hobby}/posts/index.json`) {
+    // Handle index case
     const defaultPath = `${hobby}/posts/index.json`;
     fetchVisualNovels(`${baseUrl}${defaultPath}`);
-    updateUrl(defaultPath);
+    showIndexPage();
+  } else if (rawPath.includes('/posts/page')) {
+    fetchVisualNovels(`${baseUrl}${rawPath}`);
+    showIndexPage();
+  } else {
+    fetchAndRenderDetails(rawPath);
   }
 });
-
+    
     // Fetch initial data on page load
 document.addEventListener('DOMContentLoaded', () => {
-  const jsonParam = getUrlParameter();
-  let initialPath = jsonParam;
+  const urlParam = window.location.search.slice(1);
+  let initialPath = urlParam;
   
-  if (!jsonParam) {
+  // Determine the correct initial path
+  if (!urlParam) {
     initialPath = `${hobby}/posts/index.json`;
-  } else if (!jsonParam.endsWith('.json')) {
-    initialPath = `${jsonParam}.json`;
+  } else if (!urlParam.endsWith('.json')) {
+    initialPath = `${urlParam}.json`;
   }
 
-  // Store the initial state
-  history.replaceState({ rawPath: initialPath }, '', 
-    `${window.location.pathname}?${initialPath.replace(/\.json$/, '')}`);
+  // Initialize history state
+  history.replaceState({
+    rawPath: initialPath,
+    cleanPath: initialPath.replace(/\.json$/, '')
+  }, '', `${window.location.pathname}?${initialPath.replace(/\.json$/, '')}`);
 
-  if (initialPath.includes('/posts/index.json') || initialPath === `${hobby}/posts/index.json`) {
+  // Load the appropriate content
+  if (initialPath.includes('/posts/index.json')) {
     fetchVisualNovels(`${baseUrl}${initialPath}`);
   } else if (initialPath.includes('/posts/page')) {
     fetchVisualNovels(`${baseUrl}${initialPath}`);
