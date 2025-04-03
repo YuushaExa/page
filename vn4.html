@@ -114,15 +114,15 @@ function getUrlParameter() {
 
     // Function to update URL without reloading
 function updateUrl(path) {
-  // Ensure path ends with .json for API requests
-  const apiPath = path.endsWith('.json') ? path : `${path}.json`;
-  // Create clean path for display
-  const cleanPath = apiPath.replace(/\.json$/, '');
-  const newUrl = `${window.location.pathname}?${cleanPath}`;
-  // Store both paths in state
+  // Remove any existing .json first, then add it once
+  const cleanPath = path.replace(/\.json$/, '');
+  const apiPath = `${cleanPath}.json`;
+  const displayPath = cleanPath; // No .json in displayed URL
+  
+  const newUrl = `${window.location.pathname}?${displayPath}`;
   window.history.pushState({ 
     rawPath: apiPath,
-    cleanPath: cleanPath
+    cleanPath: displayPath
   }, '', newUrl);
 }
     
@@ -173,12 +173,13 @@ function updateUrl(path) {
       `;
 
       // Add event listeners to pagination links
+// In your renderPagination function:
 document.querySelectorAll('#pagination a').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
     const page = e.target.getAttribute('data-page');
-    updateUrl(page);  // This will automatically handle the .json conversion
-    fetchVisualNovels(`${baseUrl}${page}.json`);  // Ensure .json is added for the API call
+    updateUrl(page); // This will handle the .json conversion properly
+    fetchVisualNovels(`${baseUrl}${page}.json`);
   });
 });
     }
@@ -310,8 +311,12 @@ document.querySelectorAll('#pagination a').forEach(link => {
     // Handle browser back/forward navigation
 window.addEventListener('popstate', (event) => {
   // Prefer the stored rawPath, but fall back to reconstructing from URL
-  const rawPath = event.state?.rawPath || 
-                 (window.location.search.slice(1) + '.json');
+ const rawPath = event.state?.rawPath || 
+                 `${window.location.search.slice(1)}.json`;
+  
+  // Ensure we don't double-add .json
+  const cleanPath = rawPath.replace(/\.json$/, '');
+  const apiPath = `${cleanPath}.json`;
   
   if (!rawPath || rawPath === `${hobby}/posts/index.json`) {
     // Handle index case
