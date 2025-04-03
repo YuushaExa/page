@@ -108,20 +108,17 @@
     const hobby = 'vn';
 
     // Function to parse URL parameters
-    function getUrlParameter(name) {
-      name = name.replace(/[\[\]]/g, '\\$&');
-      const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-      const results = regex.exec(window.location.href);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    function getUrlParameter() {
+      return window.location.search.slice(1); // Removes the leading '?'
+
     }
 
     // Function to update URL without reloading
 function updateUrl(path) {
-  const newUrl = window.location.pathname + '?json=' + path;
-  window.history.pushState({ path: path }, '', newUrl);
+  const newUrl = `${window.location.pathname}?${path}`;
+  window.history.pushState({ path }, '', newUrl);
 }
+    
     // Fetch and display visual novels
     async function fetchVisualNovels(url) {
       try {
