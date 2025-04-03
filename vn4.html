@@ -107,19 +107,21 @@
     const baseUrl = 'https://yuushaexa.github.io/headless/';
     const hobby = 'vn';
 
-    // Function to get the current path from URL
-    function getCurrentPath() {
-      const path = window.location.pathname;
-      // Remove the base part of the URL if needed
-      return path.replace('/page/vn1', '');
+    // Function to parse URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[\]]/g, '\\$&');
+      const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+      const results = regex.exec(window.location.href);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
 
     // Function to update URL without reloading
-    function updateUrl(path) {
-      const newUrl = '/page/vn1' + path;
-      window.history.pushState({ path: path }, '', newUrl);
-    }
-
+function updateUrl(path) {
+  const newUrl = window.location.pathname + '?json=' + path;
+  window.history.pushState({ path: path }, '', newUrl);
+}
     // Fetch and display visual novels
     async function fetchVisualNovels(url) {
       try {
@@ -139,7 +141,7 @@
       vnList.innerHTML = posts.map(post => `
         <div class="vn-container">
           <div class="vn-title">
-            <a href="/page/vn1/posts/${post.slug}.html" data-vn-link="/posts/${post.slug}.json">${post.title}</a>
+            <a href="#" data-vn-link="${post.link}">${post.title}</a>
           </div>
           <div class="vn-description">${post.description}</div>
           ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
@@ -150,8 +152,8 @@
       document.querySelectorAll('.vn-title a').forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          const vnLink = link.getAttribute('data-vn-link');
-          updateUrl('/posts/' + link.getAttribute('href').split('/').pop());
+          const vnLink = e.target.getAttribute('data-vn-link');
+          updateUrl(vnLink);
           fetchAndRenderDetails(vnLink);
         });
       });
@@ -161,18 +163,18 @@
     function renderPagination(pagination) {
       const paginationContainer = document.getElementById('pagination');
       paginationContainer.innerHTML = `
-        ${pagination.previousPage ? `<a href="/page/vn1/posts/page${pagination.previousPage}.html" data-page="${pagination.previousPage}">Previous</a>` : ''}
+        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
         <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-        ${pagination.nextPage ? `<a href="/page/vn1/posts/page${pagination.nextPage}.html" data-page="${pagination.nextPage}">Next</a>` : ''}
+        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
       `;
 
       // Add event listeners to pagination links
       document.querySelectorAll('#pagination a').forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          const page = link.getAttribute('data-page');
-          const pageUrl = `${hobby}/posts/page${page}.json`;
-          updateUrl('/posts/page' + page + '.html');
+          const page = e.target.getAttribute('data-page');
+          const pageUrl = `${page}`;
+          updateUrl(pageUrl);
           fetchVisualNovels(`${baseUrl}${pageUrl}`);
         });
       });
@@ -201,9 +203,9 @@
         ${post.developers?.length ? `
           <div class="vn-developers">
             <strong>Developers:</strong>
-            <ul>${post.developers.map(dev => `
+            <ul>${post.developers.map(post => `
               <li>
-                <a href="/page/vn1/developers/${dev.slug}.html" data-developer-link="/developers/${dev.slug}.json">${dev.title}</a>
+                <a href="#" data-developer-link="${post.link}">${post.title}</a>
               </li>
             `).join('')}</ul>
           </div>
@@ -227,7 +229,7 @@
         link.addEventListener('click', (e) => {
           e.preventDefault();
           const developerLink = link.getAttribute('data-developer-link');
-          updateUrl('/developers/' + link.getAttribute('href').split('/').pop());
+          updateUrl(developerLink);
           fetchAndRenderDeveloperDetails(developerLink);
         });
       });
@@ -259,7 +261,7 @@
             ${developer.posts.map(post => `
               <div class="vn-container">
                 <div class="vn-title">
-                  <a href="/page/vn1/posts/${post.slug}.html" data-vn-link="/posts/${post.slug}.json">${post.title}</a>
+                  <a href="#" data-vn-link="${post.link}">${post.title}</a>
                 </div>
                 <div class="vn-description">${post.description}</div>
                 ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
@@ -273,8 +275,8 @@
       document.querySelectorAll('.vn-posts a').forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          const vnLink = link.getAttribute('data-vn-link');
-          updateUrl('/posts/' + link.getAttribute('href').split('/').pop());
+          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
+          updateUrl(vnLink);
           fetchAndRenderDetails(vnLink);
         });
       });
@@ -285,7 +287,7 @@
       document.getElementById('index-container').style.display = 'block';
       document.getElementById('details-container').style.display = 'none';
       document.getElementById('page-title').textContent = 'Visual Novels';
-      updateUrl('/index.html');
+      updateUrl(`${hobby}/posts/index.json`);
     }
 
     // Show the details page
@@ -303,41 +305,38 @@
 
     // Handle browser back/forward navigation
     window.addEventListener('popstate', (event) => {
-      const path = getCurrentPath();
-      if (path === '/index.html' || path === '/') {
-        fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
+      const jsonParam = getUrlParameter('json');
+      if (jsonParam) {
+        if (jsonParam.includes('/posts/index.json') || jsonParam === `${hobby}/posts/index.json`) {
+          fetchVisualNovels(`${baseUrl}${jsonParam}`);
+          showIndexPage();
+        } else if (jsonParam.includes('/posts/page')) {
+          fetchVisualNovels(`${baseUrl}${jsonParam}`);
+          showIndexPage();
+        } else {
+          fetchAndRenderDetails(jsonParam);
+        }
+      } else {
         showIndexPage();
-      } else if (path.includes('/posts/page')) {
-        const page = path.match(/page(\d+)\.html/)[1];
-        fetchVisualNovels(`${baseUrl}${hobby}/posts/page${page}.json`);
-        showIndexPage();
-      } else if (path.includes('/posts/')) {
-        const slug = path.split('/').pop().replace('.html', '');
-        fetchAndRenderDetails(`/posts/${slug}.json`);
-      } else if (path.includes('/developers/')) {
-        const slug = path.split('/').pop().replace('.html', '');
-        fetchAndRenderDeveloperDetails(`/developers/${slug}.json`);
       }
     });
 
     // Fetch initial data on page load
     document.addEventListener('DOMContentLoaded', () => {
-      const path = getCurrentPath();
+      const jsonParam = getUrlParameter('json');
       
-      if (path === '/index.html' || path === '/') {
-        fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
-      } else if (path.includes('/posts/page')) {
-        const page = path.match(/page(\d+)\.html/)[1];
-        fetchVisualNovels(`${baseUrl}${hobby}/posts/page${page}.json`);
-      } else if (path.includes('/posts/')) {
-        const slug = path.split('/').pop().replace('.html', '');
-        fetchAndRenderDetails(`/posts/${slug}.json`);
-      } else if (path.includes('/developers/')) {
-        const slug = path.split('/').pop().replace('.html', '');
-        fetchAndRenderDeveloperDetails(`/developers/${slug}.json`);
+      if (jsonParam) {
+        if (jsonParam.includes('/posts/index.json') || jsonParam === `${hobby}/posts/index.json`) {
+          fetchVisualNovels(`${baseUrl}${jsonParam}`);
+        } else if (jsonParam.includes('/posts/page')) {
+          fetchVisualNovels(`${baseUrl}${jsonParam}`);
+        } else {
+          fetchAndRenderDetails(jsonParam);
+        }
       } else {
-        // Default to index if no matching path
+        // Default to index if no parameter
         fetchVisualNovels(`${baseUrl}${hobby}/posts/index.json`);
+        updateUrl(`${hobby}/posts/index.json`);
       }
     });
   </script>
