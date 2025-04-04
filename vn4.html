@@ -107,35 +107,75 @@
     const baseUrl = 'https://yuushaexa.github.io/headless/';
     const hobby = 'vn';
 
-    // Function to parse URL parameters
-   // Function to parse URL parameters and add .json if needed
-function getUrlParameter() {
-  const param = window.location.search.slice(1); // Removes the leading '?'
-  // Add .json if it's not already there and it's not empty
-  if (param && !param.endsWith('.json')) {
-    return `${param}.json`;
-  }
-  return param;
-}
+    // Function to parse URL parameters and add .json if needed
+    function getUrlParameter() {
+      const param = window.location.search.slice(1); // Removes the leading '?'
+      // Add .json if it's not already there and it's not empty
+      // Ensure it doesn't add .json if the param is empty
+      if (param && !param.endsWith('.json')) {
+         // Check if it looks like a file path needing .json
+         // Simple check: contains '/' and doesn't have an extension pattern like '.xxx'
+         if (param.includes('/') && !/\.[a-z0-9]{1,4}$/i.test(param)) {
+            return `${param}.json`;
+         }
+         // It might be a detail page or something else where .json is needed
+         // Let's assume paths with '/' need .json unless specified otherwise
+         if(param.includes('/')) {
+             return `${param}.json`;
+         }
+      }
+      // A more robust check might be needed depending on your exact URL structure
+      // For now, let's refine the condition slightly: only add .json if it seems path-like
+      if (param && param.includes('/') && !param.endsWith('.json') && !/\.[a-z0-9]+$/i.test(param.split('/').pop() || '')) {
+         return `${param}.json`;
+      }
+      return param; // Return original if no '/' or already has .json or looks like it has an extension
+    }
+
+     // Function to get the clean path for the URL bar (without .json)
+    function getCleanPath(path) {
+        return path.replace(/\.json$/, '');
+    }
+
+    // Function to get the full path for fetching (ensuring .json)
+    function getFullPath(path) {
+        if (path && path.includes('/') && !path.endsWith('.json')) {
+            // Basic check to avoid adding .json to things that might not need it
+            // Refine this if you have non-json paths in the future
+             if (!/\.[a-z0-9]{1,4}$/i.test(path)) {
+                 return `${path}.json`;
+             }
+        }
+        return path;
+    }
+
 
     // Function to update URL without reloading
-function updateUrl(path) {
-  // Remove .json from the path for display purposes
-  const cleanPath = path.replace(/\.json$/, '');
-  const newUrl = `${window.location.pathname}?${cleanPath}`;
-  window.history.pushState({ path }, '', newUrl);
-}
-    
+    function updateUrl(pathWithJson) {
+      // Use the potentially json-containing path for the state
+      const statePath = pathWithJson;
+      // Use the cleaned path for the browser's address bar
+      const displayPath = getCleanPath(pathWithJson);
+      const newUrl = `${window.location.pathname}?${displayPath}`;
+      // Push the state with the path needed for fetching
+      window.history.pushState({ path: statePath }, '', newUrl);
+    }
+
     // Fetch and display visual novels
     async function fetchVisualNovels(url) {
+      console.log("Fetching Index/Page:", url);
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
         const data = await response.json();
         renderVisualNovels(data.posts);
         renderPagination(data.pagination);
+        showIndexPage(); // Show the index view after fetching
       } catch (error) {
         console.error('Error fetching visual novels:', error);
+         document.getElementById('vn-list').innerHTML = `<p>Error loading data. Please try again.</p><p>${error.message}</p>`;
+         document.getElementById('pagination').innerHTML = '';
+         showIndexPage(); // Still show index layout, but with error
       }
     }
 
@@ -153,47 +193,60 @@ function updateUrl(path) {
       `).join('');
 
       // Add event listeners to visual novel links
-      document.querySelectorAll('.vn-title a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const vnLink = e.target.getAttribute('data-vn-link');
-          updateUrl(vnLink);
-          fetchAndRenderDetails(vnLink);
-        });
+      document.querySelectorAll('#vn-list .vn-title a').forEach(link => {
+        link.removeEventListener('click', handleVnLinkClick); // Prevent duplicate listeners
+        link.addEventListener('click', handleVnLinkClick);
       });
     }
+
+     function handleVnLinkClick(e) {
+        e.preventDefault();
+        const vnLink = e.target.getAttribute('data-vn-link'); // This should already have .json if needed
+        const fullPathForFetch = getFullPath(vnLink); // Ensure it has .json for fetching
+        updateUrl(fullPathForFetch); // Update URL history and display
+        fetchAndRenderDetails(fullPathForFetch);
+    }
+
 
     // Render pagination
     function renderPagination(pagination) {
       const paginationContainer = document.getElementById('pagination');
-      paginationContainer.innerHTML = `
-        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : ''}
+       paginationContainer.innerHTML = `
+        ${pagination.previousPage ? `<a href="#" data-page="${pagination.previousPage}">Previous</a>` : '<span></span>'}
         <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : ''}
+        ${pagination.nextPage ? `<a href="#" data-page="${pagination.nextPage}">Next</a>` : '<span></span>'}
       `;
+
 
       // Add event listeners to pagination links
       document.querySelectorAll('#pagination a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const page = e.target.getAttribute('data-page');
-          const pageUrl = `${page}`;
-          updateUrl(pageUrl);
-          fetchVisualNovels(`${baseUrl}${pageUrl}`);
-        });
+         link.removeEventListener('click', handlePaginationClick); // Prevent duplicate listeners
+         link.addEventListener('click', handlePaginationClick);
       });
+    }
+
+    function handlePaginationClick(e) {
+        e.preventDefault();
+        const pagePath = e.target.getAttribute('data-page'); // e.g., "vn/posts/page/2.json"
+        const fullPathForFetch = getFullPath(pagePath); // Ensure .json
+        updateUrl(fullPathForFetch);
+        fetchVisualNovels(`${baseUrl}${fullPathForFetch}`);
     }
 
     // Fetch and render details for a specific visual novel
     async function fetchAndRenderDetails(vnLink) {
+       console.log("Fetching Details:", vnLink);
+       const fullUrl = `${baseUrl}${vnLink}`;
       try {
-        const response = await fetch(`${baseUrl}${vnLink}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        const response = await fetch(fullUrl);
+        if (!response.ok) throw new Error(`Network response was not ok for ${fullUrl}`);
         const vnDetails = await response.json();
         renderDetails(vnDetails);
-        showDetailsPage();
+        showDetailsPage(); // Show details view
       } catch (error) {
         console.error('Error fetching visual novel details:', error);
+         document.getElementById('vn-details').innerHTML = `<p>Error loading details. Please try again.</p><p>${error.message}</p>`;
+         showDetailsPage(); // Show details layout but with error
       }
     }
 
@@ -202,14 +255,14 @@ function updateUrl(path) {
       const detailsContainer = document.getElementById('vn-details');
       detailsContainer.innerHTML = `
         <div class="vn-title">${post.title}</div>
-        <div class="vn-description">${post.description}</div>
+        <div class="vn-description">${post.description || ''}</div>
         ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
         ${post.developers?.length ? `
           <div class="vn-developers">
             <strong>Developers:</strong>
-            <ul>${post.developers.map(post => `
+            <ul>${post.developers.map(dev => `
               <li>
-                <a href="#" data-developer-link="${post.link}">${post.title}</a>
+                <a href="#" data-developer-link="${dev.link}">${dev.title}</a>
               </li>
             `).join('')}</ul>
           </div>
@@ -229,26 +282,35 @@ function updateUrl(path) {
       `;
 
       // Attach event listeners to developer links AFTER rendering
-      document.querySelectorAll('.vn-developers a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const developerLink = link.getAttribute('data-developer-link');
-          updateUrl(developerLink);
-          fetchAndRenderDeveloperDetails(developerLink);
-        });
+      document.querySelectorAll('#vn-details .vn-developers a').forEach(link => {
+         link.removeEventListener('click', handleDeveloperLinkClick); // Prevent duplicate listeners
+         link.addEventListener('click', handleDeveloperLinkClick);
       });
     }
 
+    function handleDeveloperLinkClick(e) {
+        e.preventDefault();
+        const developerLink = e.target.getAttribute('data-developer-link'); // Should have .json if needed
+        const fullPathForFetch = getFullPath(developerLink);
+        updateUrl(fullPathForFetch);
+        fetchAndRenderDeveloperDetails(fullPathForFetch);
+    }
+
+
     // Fetch and render details for a specific developer
     async function fetchAndRenderDeveloperDetails(developerLink) {
+       console.log("Fetching Developer:", developerLink);
+       const fullUrl = `${baseUrl}${developerLink}`;
       try {
-        const response = await fetch(`${baseUrl}${developerLink}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        const response = await fetch(fullUrl);
+        if (!response.ok) throw new Error(`Network response was not ok for ${fullUrl}`);
         const developerDetails = await response.json();
         renderDeveloperDetails(developerDetails);
-        showDetailsPage();
+        showDetailsPage(); // Show details view (repurposed for developer)
       } catch (error) {
         console.error('Error fetching developer details:', error);
+        document.getElementById('vn-details').innerHTML = `<p>Error loading developer details. Please try again.</p><p>${error.message}</p>`;
+        showDetailsPage(); // Show details layout but with error
       }
     }
 
@@ -268,86 +330,126 @@ function updateUrl(path) {
                   <a href="#" data-vn-link="${post.link}">${post.title}</a>
                 </div>
                 <div class="vn-description">${post.description}</div>
-                ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
+                ${post.image?.url ? `<img class="vn-image vn-post-image" src="${post.image.url}" alt="${post.title}">` : ''}
               </div>
             `).join('')}
           </div>
         ` : ''}
       `;
 
-      // Re-attach event listeners to visual novel links
-      document.querySelectorAll('.vn-posts a').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const vnLink = e.target.closest('a').getAttribute('data-vn-link');
-          updateUrl(vnLink);
-          fetchAndRenderDetails(vnLink);
-        });
+      // Re-attach event listeners to visual novel links within the developer page
+      document.querySelectorAll('#vn-details .vn-posts a').forEach(link => {
+        link.removeEventListener('click', handleVnLinkClick); // Reuse the VN link handler
+        link.addEventListener('click', handleVnLinkClick);
       });
     }
 
-    // Show the index page
+    // Show the index page (Display only)
     function showIndexPage() {
       document.getElementById('index-container').style.display = 'block';
       document.getElementById('details-container').style.display = 'none';
       document.getElementById('page-title').textContent = 'Visual Novels';
-      updateUrl(`${hobby}/posts/index.json`);
+      // DO NOT update URL here during popstate/load
     }
 
-    // Show the details page
+    // Show the details page (Display only)
     function showDetailsPage() {
       document.getElementById('index-container').style.display = 'none';
       document.getElementById('details-container').style.display = 'block';
+      // Title might be set dynamically based on content later if needed
       document.getElementById('page-title').textContent = 'Details';
     }
 
-    // Back to index page
+    // Back to index page button listener
     document.getElementById('back-to-index').addEventListener('click', (e) => {
       e.preventDefault();
-      showIndexPage();
+      // Explicitly go back to the *first* page
+      const indexPath = `${hobby}/posts/index.json`;
+      updateUrl(indexPath); // Set URL to the base index
+      fetchVisualNovels(`${baseUrl}${indexPath}`); // Fetch and display page 1
+      // showIndexPage(); // fetchVisualNovels will call this
     });
 
     // Handle browser back/forward navigation
-   window.addEventListener('popstate', (event) => {
-  const jsonParam = getUrlParameter();
-  const fullPath = jsonParam.endsWith('.json') ? jsonParam : `${jsonParam}.json`;
-  
-  if (jsonParam) {
-    if (fullPath.includes('/posts/index.json') || fullPath === `${hobby}/posts/index.json`) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
-      showIndexPage();
-    } else if (fullPath.includes('/posts/page')) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
-      showIndexPage();
-    } else {
-      fetchAndRenderDetails(fullPath);
-    }
-  } else {
-    showIndexPage();
-  }
-});
+    window.addEventListener('popstate', (event) => {
+        console.log("Popstate event:", event.state);
+        let path = null;
+        if (event.state && event.state.path) {
+            path = event.state.path; // Use the path stored in history state
+        } else {
+            // Fallback: parse the current URL's query string if state is missing
+            const queryParam = window.location.search.slice(1);
+             path = getFullPath(queryParam); // Ensure it has .json if needed
+             console.log("Popstate fallback, path from URL:", path);
+        }
+
+        if (path) {
+            // Determine if it's an index/page view or a detail view based on the path structure
+            if (path.includes(`/${hobby}/posts/index.json`) || path.includes(`/${hobby}/posts/page/`)) {
+                 console.log("Popstate: Navigating to Index/Page", path);
+                 fetchVisualNovels(`${baseUrl}${path}`);
+                 // showIndexPage(); // fetchVisualNovels will call this
+            } else if (path.includes(`/${hobby}/developers/`)) { // Check for developer path
+                 console.log("Popstate: Navigating to Developer", path);
+                 fetchAndRenderDeveloperDetails(path);
+                 // showDetailsPage(); // fetchAndRenderDeveloperDetails will call this
+            } else if (path.includes(`/${hobby}/`)) { // Assume other paths under hobby are details
+                 console.log("Popstate: Navigating to Details", path);
+                 fetchAndRenderDetails(path);
+                 // showDetailsPage(); // fetchAndRenderDetails will call this
+            } else {
+                 console.log("Popstate: Unknown path type, going to default index", path);
+                 // Fallback to default index if path is unrecognized
+                 const defaultPath = `${hobby}/posts/index.json`;
+                 fetchVisualNovels(`${baseUrl}${defaultPath}`);
+                 // showIndexPage(); // fetchVisualNovels will call this
+            }
+        } else {
+            // No path in state or URL query string, load default index
+             console.log("Popstate: No path found, loading default index");
+             const defaultPath = `${hobby}/posts/index.json`;
+             // We shouldn't need to updateUrl here, the browser URL should be at the base
+             fetchVisualNovels(`${baseUrl}${defaultPath}`);
+            // showIndexPage(); // fetchVisualNovels will call this
+        }
+    });
+
 
     // Fetch initial data on page load
-document.addEventListener('DOMContentLoaded', () => {
-  const jsonParam = getUrlParameter();
-  
-  if (jsonParam) {
-    const fullPath = jsonParam.endsWith('.json') ? jsonParam : `${jsonParam}.json`;
-    
-    if (fullPath.includes('/posts/index.json') || fullPath === `${hobby}/posts/index.json`) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
-    } else if (fullPath.includes('/posts/page')) {
-      fetchVisualNovels(`${baseUrl}${fullPath}`);
-    } else {
-      fetchAndRenderDetails(fullPath);
-    }
-  } else {
-    // Default to index if no parameter
-    const defaultPath = `${hobby}/posts/index.json`;
-    fetchVisualNovels(`${baseUrl}${defaultPath}`);
-    updateUrl(defaultPath);
-  }
-});
+    document.addEventListener('DOMContentLoaded', () => {
+      const initialQueryParam = window.location.search.slice(1);
+      let initialPath = getFullPath(initialQueryParam); // Get path from URL, ensure .json
+
+      console.log("DOMContentLoaded: Initial path from URL:", initialPath);
+
+      if (initialPath && initialPath.includes('/')) {
+          // A specific path is provided in the URL
+           if (initialPath.includes(`/${hobby}/posts/index.json`) || initialPath.includes(`/${hobby}/posts/page/`)) {
+               console.log("DOMContentLoaded: Loading Index/Page", initialPath);
+               fetchVisualNovels(`${baseUrl}${initialPath}`);
+           } else if (initialPath.includes(`/${hobby}/developers/`)) {
+               console.log("DOMContentLoaded: Loading Developer", initialPath);
+               fetchAndRenderDeveloperDetails(initialPath);
+           } else { // Assume details
+                console.log("DOMContentLoaded: Loading Details", initialPath);
+               fetchAndRenderDetails(initialPath);
+           }
+           // Ensure the history state is set correctly on initial load if coming from a deep link
+           if (!window.history.state || window.history.state.path !== initialPath) {
+                const displayPath = getCleanPath(initialPath);
+                window.history.replaceState({ path: initialPath }, '', `${window.location.pathname}?${displayPath}`);
+                console.log("DOMContentLoaded: Replaced history state for initial load.");
+           }
+
+      } else {
+        // No specific path, load default index
+        console.log("DOMContentLoaded: Loading default index");
+        const defaultPath = `${hobby}/posts/index.json`;
+        fetchVisualNovels(`${baseUrl}${defaultPath}`);
+        // Set the initial state and URL correctly for the default view
+        updateUrl(defaultPath); // Use updateUrl to set history state + clean URL
+      }
+    });
   </script>
   <script src="/page/src/search.js"></script>
 </body>
