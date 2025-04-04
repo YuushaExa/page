@@ -453,67 +453,8 @@
           updateUrl(defaultIndexPath); // Ensure URL reflects the loaded state
       }
 
-       // Initialize search (if search.js is loaded and setup properly)
-       if (typeof initializeSearch === 'function') {
-            initializeSearch(baseUrl, hobby, renderSearchResults, clearSearchResults);
-       } else {
-            console.warn("Search initialization function not found.");
-       }
     });
 
-    // --- Search related functions (assuming search.js provides initializeSearch) ---
-    function renderSearchResults(results) {
-        const resultsContainer = document.getElementById('search-results');
-        const vnListContainer = document.getElementById('vn-list');
-        const paginationContainer = document.getElementById('pagination');
-
-        if (results && results.length > 0) {
-            vnListContainer.style.display = 'none'; // Hide regular list
-            paginationContainer.style.display = 'none'; // Hide pagination
-            resultsContainer.style.display = 'block'; // Show results container
-            resultsContainer.innerHTML = results.map(post => `
-                <div class="vn-container">
-                  <div class="vn-title">
-                    <a href="#" data-vn-link="${post.link}">${post.title}</a>
-                  </div>
-                  <div class="vn-description">${post.description || 'No description.'}</div>
-                   ${post.image?.url ? `<img class="vn-image" src="${post.image.url}" alt="${post.title}">` : ''}
-                </div>
-            `).join('');
-
-            // Add event listeners for search result links
-             resultsContainer.querySelectorAll('a[data-vn-link]').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const vnLink = e.target.closest('a').getAttribute('data-vn-link');
-                     if (vnLink) {
-                        updateUrl(vnLink);
-                        fetchAndRenderDetails(vnLink);
-                        clearSearchResults(); // Clear search results when navigating away
-                        document.getElementById('search-bar').value = ''; // Clear search bar text
-                     }
-                });
-             });
-
-        } else {
-            resultsContainer.innerHTML = '<p>No results found.</p>';
-            resultsContainer.style.display = 'block';
-             vnListContainer.style.display = 'none'; // Keep regular list hidden
-             paginationContainer.style.display = 'none'; // Keep pagination hidden
-        }
-    }
-
-    function clearSearchResults() {
-        const resultsContainer = document.getElementById('search-results');
-        const vnListContainer = document.getElementById('vn-list');
-        const paginationContainer = document.getElementById('pagination');
-
-        resultsContainer.innerHTML = '';
-        resultsContainer.style.display = 'none';
-        vnListContainer.style.display = 'block'; // Show regular list again
-        paginationContainer.style.display = 'block'; // Show pagination again
-    }
-    // --- End of Search related functions ---
 
   </script>
   <!-- Ensure search.js is loaded *after* the main script block -->
