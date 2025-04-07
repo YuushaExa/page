@@ -3,159 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VN Posts</title>
+  <title>VN Twitter</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-    .post { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
-    .post img { max-width: 200px; max-height: 200px; }
-    .loading { text-align: center; padding: 20px; }
-    .pagination { display: flex; gap: 10px; margin-top: 20px; }
-    .post-detail { margin-top: 20px; padding: 15px; border: 1px solid #eee; }
+    :root {
+      --twitter-blue: #1DA1F2;
+      --twitter-dark: #15202B;
+      --twitter-light-gray: #E1E8ED;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f9fa;
+      color: #0F1419;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      border-left: 1px solid var(--twitter-light-gray);
+      border-right: 1px solid var(--twitter-light-gray);
+      min-height: 100vh;
+    }
+    .header {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--twitter-light-gray);
+      font-weight: bold;
+      font-size: 20px;
+      background: white;
+      position: sticky;
+      top: 0;
+    }
+    .tweet {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--twitter-light-gray);
+      background: white;
+      display: flex;
+      gap: 12px;
+    }
+    .tweet-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .tweet-content {
+      flex: 1;
+    }
+    .tweet-user {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .tweet-username {
+      color: #536471;
+    }
+    .tweet-text {
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    .tweet-image {
+      width: 100%;
+      border-radius: 15px;
+      margin-top: 10px;
+      max-height: 300px;
+      object-fit: cover;
+    }
+    .tweet-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      color: #536471;
+      max-width: 80%;
+    }
+    .tweet-action {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tweet-action:hover {
+      color: var(--twitter-blue);
+      cursor: pointer;
+    }
+    .loading {
+      padding: 20px;
+      text-align: center;
+      color: #536471;
+    }
+    .tweet-detail {
+      padding: 20px;
+      background: white;
+    }
   </style>
 </head>
 <body>
-  <div id="app">
-    <h1>VN Posts</h1>
-    <div id="posts-container" class="loading">Loading posts...</div>
-    <div id="pagination" class="pagination"></div>
-    <div id="post-detail" class="post-detail" style="display: none;"></div>
+  <div class="container">
+    <div class="header">Home</div>
+    <div id="tweets-container"></div>
+    <div id="tweet-detail" style="display: none;"></div>
   </div>
   <script>
 // State
 let currentPage = 1;
+let isLoading = false;
 const API_BASE = 'https://yuushaexa.github.io/headless';
 
 // DOM Elements
-const postsContainer = document.getElementById('posts-container');
-const paginationEl = document.getElementById('pagination');
-const postDetailEl = document.getElementById('post-detail');
+const tweetsContainer = document.getElementById('tweets-container');
+const tweetDetailEl = document.getElementById('tweet-detail');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-  // Handle initial load or History API navigation (back/forward)
-  window.addEventListener('popstate', handleRoute);
-  handleRoute();
+  fetchPosts();
+  window.addEventListener('scroll', handleInfiniteScroll);
 });
 
-// Route handler (for History API)
-function handleRoute() {
-  const path = window.location.pathname.split('/').filter(Boolean);
-  const hash = window.location.hash.substring(1);
-
-  if (path[0] === 'posts' && path[1]) {
-    // Post detail view (e.g., /posts/driven-by-madness)
-    const postSlug = path[1];
-    loadPostDetail(`vn/posts/${postSlug}.json`);
-  } else if (hash.startsWith('page-')) {
-    // Paginated list (e.g., #page-2)
-    currentPage = parseInt(hash.split('-')[1]);
-    fetchPosts(currentPage);
-  } else {
-    // Default view (page 1)
-    currentPage = 1;
-    fetchPosts(1);
-  }
-}
-
-// Fetch posts from API
-async function fetchPosts(page = 1) {
-  postsContainer.innerHTML = '<div class="loading">Loading posts...</div>';
-  postDetailEl.style.display = 'none';
+// Fetch posts with infinite scroll
+async function fetchPosts() {
+  if (isLoading) return;
+  isLoading = true;
+  
+  tweetsContainer.insertAdjacentHTML('beforeend', '<div class="loading">Loading more posts...</div>');
 
   try {
-    const response = await fetch(`${API_BASE}/vn/posts/${page === 1 ? 'index' : `page/${page}`}.json`);
+    const response = await fetch(`${API_BASE}/vn/posts/${currentPage === 1 ? 'index' : `page/${currentPage}`}.json`);
     const data = await response.json();
-    renderPosts(data.posts);
-    renderPagination(data.pagination);
-
-    // Update URL without reload (e.g., #page-2)
-    window.history.pushState({}, '', `#page-${page}`);
-    document.title = `VN Posts - Page ${page}`;
+    renderTweets(data.posts);
+    currentPage++;
   } catch (error) {
-    postsContainer.innerHTML = `<div class="error">Failed to load posts: ${error.message}</div>`;
+    console.error('Failed to load posts:', error);
+  } finally {
+    isLoading = false;
+    document.querySelector('.loading')?.remove();
   }
 }
 
-// Render posts
-function renderPosts(posts) {
-  postsContainer.innerHTML = posts
-    .map(post => {
-      const postSlug = post.link.replace('vn/posts/', '').replace('.json', '');
-      return `
-        <div class="post" data-id="${post.id}">
-          <h3><a href="/posts/${postSlug}" onclick="navigateToPost(event, '${post.link}')">${post.title}</a></h3>
-          ${post.image?.url ? `<img src="${post.image.url}" alt="${post.title}">` : ''}
+// Render tweets
+function renderTweets(posts) {
+  posts.forEach(post => {
+    const tweetEl = document.createElement('div');
+    tweetEl.className = 'tweet';
+    tweetEl.innerHTML = `
+      <img src="https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg" class="tweet-avatar" alt="Avatar">
+      <div class="tweet-content">
+        <div>
+          <span class="tweet-user">VN Post</span>
+          <span class="tweet-username">@visualnovel · ${new Date().toLocaleDateString()}</span>
         </div>
-      `;
-    })
-    .join('');
+        <p class="tweet-text">${post.title}</p>
+        ${post.image?.url ? `<img src="${post.image.url}" class="tweet-image" alt="${post.title}">` : ''}
+        <div class="tweet-actions">
+          <div class="tweet-action" onclick="toggleLike(this)">
+            <span>❤️</span>
+            <span>0</span>
+          </div>
+          <div class="tweet-action" onclick="toggleRetweet(this)">
+            <span>🔄</span>
+            <span>0</span>
+          </div>
+          <div class="tweet-action" onclick="showTweetDetail('${post.link}')">
+            <span>💬</span>
+            <span>0</span>
+          </div>
+        </div>
+      </div>
+    `;
+    tweetsContainer.appendChild(tweetEl);
+  });
 }
 
-// Navigate to post (with History API)
-function navigateToPost(event, postLink) {
-  event.preventDefault();
-  const postSlug = postLink.replace('vn/posts/', '').replace('.json','');
-  window.history.pushState({}, '', `/posts/${postSlug}`);
-  document.title = `VN Post - ${event.target.textContent}`;
-  loadPostDetail(postLink);
+// Infinite scroll
+function handleInfiniteScroll() {
+  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    fetchPosts();
+  }
 }
 
-// Load post detail
-async function loadPostDetail(postLink) {
-  postsContainer.style.display = 'none';
-  paginationEl.style.display = 'none';
-  postDetailEl.style.display = 'block';
-  postDetailEl.innerHTML = '<div class="loading">Loading post details...</div>';
+// Tweet interactions
+function toggleLike(element) {
+  const likeCount = element.querySelector('span:last-child');
+  likeCount.textContent = parseInt(likeCount.textContent) + (element.classList.contains('liked') ? -1 : 1);
+  element.classList.toggle('liked');
+}
 
+function toggleRetweet(element) {
+  const retweetCount = element.querySelector('span:last-child');
+  retweetCount.textContent = parseInt(retweetCount.textContent) + (element.classList.contains('retweeted') ? -1 : 1);
+  element.classList.toggle('retweeted');
+}
+
+// Show tweet detail
+async function showTweetDetail(postLink) {
   try {
     const response = await fetch(`${API_BASE}/${postLink}`);
     const post = await response.json();
-    renderPostDetail(post);
+    
+    tweetDetailEl.innerHTML = `
+      <div class="tweet-detail">
+        <div class="tweet">
+          <img src="https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_400x400.jpg" class="tweet-avatar" alt="Avatar">
+          <div class="tweet-content">
+            <div>
+              <span class="tweet-user">VN Post</span>
+              <span class="tweet-username">@visualnovel · ${new Date().toLocaleDateString()}</span>
+            </div>
+            <p class="tweet-text">${post.title}</p>
+            ${post.image?.url ? `<img src="${post.image.url}" class="tweet-image" alt="${post.title}">` : ''}
+            <p class="tweet-text">${post.description || ''}</p>
+            <div class="tweet-actions">
+              <div class="tweet-action liked">
+                <span>❤️</span>
+                <span>42</span>
+              </div>
+              <div class="tweet-action retweeted">
+                <span>🔄</span>
+                <span>12</span>
+              </div>
+              <div class="tweet-action">
+                <span>💬</span>
+                <span>7</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button onclick="hideTweetDetail()">Back to timeline</button>
+      </div>
+    `;
+    
+    tweetsContainer.style.display = 'none';
+    tweetDetailEl.style.display = 'block';
   } catch (error) {
-    postDetailEl.innerHTML = `<div class="error">Failed to load post: ${error.message}</div>`;
+    console.error('Failed to load tweet details:', error);
   }
 }
 
-// Render post detail
-function renderPostDetail(post) {
-  postDetailEl.innerHTML = `
-    <h2>${post.title}</h2>
-    ${post.image?.url ? `<img src="${post.image.url}" alt="${post.title}" style="max-width: 300px;">` : ''}
-    <p>${post.description || 'No description available.'}</p>
-    ${post.developers?.length ? `
-      <h4>Developers:</h4>
-      <ul>
-        ${post.developers.map(dev => `<li>${dev.title}</li>`).join('')}
-      </ul>
-    ` : ''}
-    <button onclick="backToPosts()">Back to Posts</button>
-  `;
+function hideTweetDetail() {
+  tweetsContainer.style.display = 'block';
+  tweetDetailEl.style.display = 'none';
 }
-
-// Back to posts list
-function backToPosts() {
-  window.history.pushState({}, '', '/');
-  document.title = 'VN Posts';
-  postsContainer.style.display = 'block';
-  paginationEl.style.display = 'flex';
-  postDetailEl.style.display = 'none';
-  fetchPosts(currentPage);
-}
-
-// Render pagination
-function renderPagination(pagination) {
-  paginationEl.innerHTML = `
-    ${pagination.previousPage ? `<button onclick="changePage(${currentPage - 1})">Previous</button>` : ''}
-    <span>Page ${pagination.currentPage} of ${pagination.totalPages}</span>
-    ${pagination.nextPage ? `<button onclick="changePage(${currentPage + 1})">Next</button>` : ''}
-  `;
-}
-
-// Change page
-function changePage(page) {
-  currentPage = page;
-  fetchPosts(page);
-}  
   </script>
 </body>
 </html>
