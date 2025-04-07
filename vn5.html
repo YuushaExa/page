@@ -94,7 +94,7 @@ function renderPosts(posts) {
 // Navigate to post (with History API)
 function navigateToPost(event, postLink) {
   event.preventDefault();
-  const postSlug = postLink.replace('vn/posts/', '').replace('.json', ');
+  const postSlug = postLink.replace('vn/posts/', '').replace('.json','');
   window.history.pushState({}, '', `/posts/${postSlug}`);
   document.title = `VN Post - ${event.target.textContent}`;
   loadPostDetail(postLink);
