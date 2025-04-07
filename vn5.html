@@ -20,7 +20,6 @@
     <div id="pagination" class="pagination"></div>
     <div id="post-detail" class="post-detail" style="display: none;"></div>
   </div>
-
   <script>
 // State
 let currentPage = 1;
@@ -30,6 +29,33 @@ const API_BASE = 'https://yuushaexa.github.io/headless';
 const postsContainer = document.getElementById('posts-container');
 const paginationEl = document.getElementById('pagination');
 const postDetailEl = document.getElementById('post-detail');
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  // Handle initial load or History API navigation (back/forward)
+  window.addEventListener('popstate', handleRoute);
+  handleRoute();
+});
+
+// Route handler (for History API)
+function handleRoute() {
+  const path = window.location.pathname.split('/').filter(Boolean);
+  const hash = window.location.hash.substring(1);
+
+  if (path[0] === 'posts' && path[1]) {
+    // Post detail view (e.g., /posts/driven-by-madness)
+    const postSlug = path[1];
+    loadPostDetail(`vn/posts/${postSlug}.json`);
+  } else if (hash.startsWith('page-')) {
+    // Paginated list (e.g., #page-2)
+    currentPage = parseInt(hash.split('-')[1]);
+    fetchPosts(currentPage);
+  } else {
+    // Default view (page 1)
+    currentPage = 1;
+    fetchPosts(1);
+  }
+}
 
 // Fetch posts from API
 async function fetchPosts(page = 1) {
@@ -41,6 +67,10 @@ async function fetchPosts(page = 1) {
     const data = await response.json();
     renderPosts(data.posts);
     renderPagination(data.pagination);
+
+    // Update URL without reload (e.g., #page-2)
+    window.history.pushState({}, '', `#page-${page}`);
+    document.title = `VN Posts - Page ${page}`;
   } catch (error) {
     postsContainer.innerHTML = `<div class="error">Failed to load posts: ${error.message}</div>`;
   }
@@ -49,26 +79,40 @@ async function fetchPosts(page = 1) {
 // Render posts
 function renderPosts(posts) {
   postsContainer.innerHTML = posts
-    .map(post => `
-      <div class="post" data-id="${post.id}">
-        <h3><a href="#" onclick="loadPostDetail('${post.link}')">${post.title}</a></h3>
-        ${post.image?.url ? `<img src="${post.image.url}" alt="${post.title}">` : ''}
-      </div>
-    `)
+    .map(post => {
+      const postSlug = post.link.replace('vn/posts/', '').replace('.json', '');
+      return `
+        <div class="post" data-id="${post.id}">
+          <h3><a href="/posts/${postSlug}" onclick="navigateToPost(event, '${post.link}')">${post.title}</a></h3>
+          ${post.image?.url ? `<img src="${post.image.url}" alt="${post.title}">` : ''}
+        </div>
+      `;
+    })
     .join('');
+}
+
+// Navigate to post (with History API)
+function navigateToPost(event, postLink) {
+  event.preventDefault();
+  const postSlug = postLink.replace('vn/posts/', '').replace('.json', ');
+  window.history.pushState({}, '', `/posts/${postSlug}`);
+  document.title = `VN Post - ${event.target.textContent}`;
+  loadPostDetail(postLink);
 }
 
 // Load post detail
 async function loadPostDetail(postLink) {
-  postDetailEl.style.display = 'none';
-  postsContainer.innerHTML = '<div class="loading">Loading post details...</div>';
+  postsContainer.style.display = 'none';
+  paginationEl.style.display = 'none';
+  postDetailEl.style.display = 'block';
+  postDetailEl.innerHTML = '<div class="loading">Loading post details...</div>';
 
   try {
     const response = await fetch(`${API_BASE}/${postLink}`);
     const post = await response.json();
     renderPostDetail(post);
   } catch (error) {
-    postsContainer.innerHTML = `<div class="error">Failed to load post: ${error.message}</div>`;
+    postDetailEl.innerHTML = `<div class="error">Failed to load post: ${error.message}</div>`;
   }
 }
 
@@ -86,16 +130,15 @@ function renderPostDetail(post) {
     ` : ''}
     <button onclick="backToPosts()">Back to Posts</button>
   `;
-  postDetailEl.style.display = 'block';
-  postsContainer.style.display = 'none';
-  paginationEl.style.display = 'none';
 }
 
 // Back to posts list
 function backToPosts() {
-  postDetailEl.style.display = 'none';
+  window.history.pushState({}, '', '/');
+  document.title = 'VN Posts';
   postsContainer.style.display = 'block';
   paginationEl.style.display = 'flex';
+  postDetailEl.style.display = 'none';
   fetchPosts(currentPage);
 }
 
@@ -112,11 +155,7 @@ function renderPagination(pagination) {
 function changePage(page) {
   currentPage = page;
   fetchPosts(page);
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => fetchPosts(1));
-      
+}  
   </script>
 </body>
 </html>
