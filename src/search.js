@@ -59,11 +59,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (resultIds.length > 0) {
           // Display matching IDs
-          resultIds.forEach((id) => {
-            const resultItem = document.createElement('div');
-            resultItem.textContent = `ID: ${id}`;
-            searchResults.appendChild(resultItem);
-          });
+  if (resultIds.length > 0) {
+  // Display matching IDs
+  resultIds.forEach((item) => {
+    const resultItem = document.createElement('div');
+    
+    // Check if the item is an object with an "available" property
+    if (typeof item === 'object' && item.available) {
+      // Handle the case where it's an object with an array of IDs
+      item.available.forEach(id => {
+        const idItem = document.createElement('div');
+        idItem.textContent = `ID: ${id}`;
+        searchResults.appendChild(idItem);
+      });
+    } 
+    // Check if it's a simple string ID
+    else if (typeof item === 'string') {
+      resultItem.textContent = `ID: ${item}`;
+      searchResults.appendChild(resultItem);
+    }
+  });
+}
         } else {
           // No results found
           searchResults.textContent = 'No results found.';
