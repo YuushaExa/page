@@ -22,57 +22,50 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Function to fetch and process search results
- const handleSearch = async (query) => {
+// Update your handleSearch function with this version
+const handleSearch = async (query) => {
   searchResults.innerHTML = ''; // Clear previous results
 
   if (query.length >= 2) {
     try {
-      // Tokenize the query into individual words
-      const tokens = tokenize(query);
-
-      // Fetch search index files for each token and retrieve document IDs
-      const tokenResults = await Promise.all(
-        tokens.map(async (token) => {
-          const prefix = token.slice(0, 2); // First two letters as prefix
-          const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
-
-          const response = await fetch(filePath);
-          if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
-          const searchData = await response.json();
-
-          // Find exact matches for the token (or closest match)
-          const exactMatch = searchData[token] || 
-                            Object.entries(searchData)
-                              .find(([word]) => word.includes(token))?.[1];
-
-          return exactMatch || [];
-        })
-      );
-
-      // Find the intersection of document IDs for all tokens
-      const resultIds = tokenResults.reduce((acc, curr) => {
-        if (acc.length === 0) return curr;
-        return acc.filter(id => curr.includes(id));
-      }, []);
-
+      const prefix = query.slice(0, 2).toLowerCase(); // Get first two characters
+      const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
+      
+      const response = await fetch(filePath);
+      if (!response.ok) throw new Error(`Index not found for prefix: ${prefix}`);
+      
+      const searchData = await response.json();
+      
+      // Find all word groups that start with the search query
+      const results = [];
+      
+      // Get the main category (like "av" or "mi")
+      const mainCategory = searchData[prefix];
+      if (mainCategory) {
+        // Search through all word groups in this category
+        for (const [word, ids] of Object.entries(mainCategory)) {
+          if (word.toLowerCase().includes(query.toLowerCase())) {
+            results.push(...ids);
+          }
+        }
+      }
+      
       // Display results
-      if (resultIds.length > 2) {
-        searchResults.innerHTML = resultIds.map(id => 
-          `<div class="search-result">ID: ${id}</div>`
+      if (results.length > 0) {
+        // Remove duplicates and display
+        const uniqueResults = [...new Set(results)];
+        searchResults.innerHTML = uniqueResults.map(id => 
+          `<div class="search-result">${id}</div>`
         ).join('');
       } else {
         searchResults.textContent = 'No results found.';
       }
     } catch (error) {
-      console.error('Error fetching search index:', error);
-      searchResults.innerHTML = `
-        <div class="search-error">
-          Error loading search results. Please try again.
-        </div>
-      `;
+      console.error('Search error:', error);
+      searchResults.textContent = 'Error loading search results.';
     }
   } else if (query.length > 0) {
-    searchResults.textContent = 'Please type at least 2 characters to search.';
+    searchResults.textContent = 'Please type at least 2 characters.';
   } else {
     searchResults.textContent = '';
   }
