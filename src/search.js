@@ -22,54 +22,64 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Function to fetch and process search results
-// Update your handleSearch function with this version
-const handleSearch = async (query) => {
-  searchResults.innerHTML = ''; // Clear previous results
+  const handleSearch = async (query) => {
+    searchResults.innerHTML = ''; // Clear previous results
 
-  if (query.length >= 2) {
-    try {
-      const prefix = query.slice(0, 2).toLowerCase(); // Get first two characters
-      const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
-      
-      const response = await fetch(filePath);
-      if (!response.ok) throw new Error(`Index not found for prefix: ${prefix}`);
-      
-      const searchData = await response.json();
-      
-      // Find all word groups that start with the search query
-      const results = [];
-      
-      // Get the main category (like "av" or "mi")
-      const mainCategory = searchData[prefix];
-      if (mainCategory) {
-        // Search through all word groups in this category
-        for (const [word, ids] of Object.entries(mainCategory)) {
-          if (word.toLowerCase().includes(query.toLowerCase())) {
-            results.push(...ids);
-          }
+    if (query.length >= 2) {
+      try {
+        // Tokenize the query into individual words
+        const tokens = tokenize(query);
+
+        // Fetch search index files for each token and retrieve document IDs
+        const tokenResults = await Promise.all(
+          tokens.map(async (token) => {
+            const prefix = token.slice(0, 2); // Extract the first three letters as the prefix
+            const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
+
+            // Fetch the JSON file for the prefix
+            const response = await fetch(filePath);
+            if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
+            const searchData = await response.json();
+
+            // Find matching words for the token
+            const matchedWords = Object.keys(searchData).filter((word) =>
+              word.toLowerCase().startsWith(token)
+            );
+
+            // Retrieve document IDs for all matching words
+            return matchedWords.flatMap((word) => searchData[word]);
+          })
+        );
+
+        // Find the intersection of document IDs for all tokens
+        const resultIds = tokenResults.reduce((acc, curr) => {
+          if (acc.length === 0) return curr; // Initialize with the first set of IDs
+          return acc.filter((id) => curr.includes(id)); // Keep only IDs present in both sets
+        }, []);
+
+        if (resultIds.length > 0) {
+          // Display matching IDs
+          resultIds.forEach((id) => {
+            const resultItem = document.createElement('div');
+            resultItem.textContent = `ID: ${id}`;
+            searchResults.appendChild(resultItem);
+          });
+        } else {
+          // No results found
+          searchResults.textContent = 'No results found.';
         }
-      }
-      
-      // Display results
-      if (results.length > 0) {
-        // Remove duplicates and display
-        const uniqueResults = [...new Set(results)];
-        searchResults.innerHTML = uniqueResults.map(id => 
-          `<div class="search-result">${id}</div>`
-        ).join('');
-      } else {
+      } catch (error) {
+        console.error('Error fetching search index:', error);
         searchResults.textContent = 'No results found.';
       }
-    } catch (error) {
-      console.error('Search error:', error);
-      searchResults.textContent = 'Error loading search results.';
+    } else if (query.length > 0 && query.length < 2) {
+      // Inform the user to type at least 3 characters
+      searchResults.textContent = 'Please type at least 2 characters to search.';
+    } else {
+      // Clear results when the input is empty
+      searchResults.textContent = '';
     }
-  } else if (query.length > 0) {
-    searchResults.textContent = 'Please type at least 2 characters.';
-  } else {
-    searchResults.textContent = '';
-  }
-};
+  };
 
   // Add debounced event listener
   searchBar.addEventListener('input', debounce((e) => {
