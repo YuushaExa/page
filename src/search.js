@@ -22,64 +22,61 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Function to fetch and process search results
-  const handleSearch = async (query) => {
-    searchResults.innerHTML = ''; // Clear previous results
+ const handleSearch = async (query) => {
+  searchResults.innerHTML = ''; // Clear previous results
 
-    if (query.length >= 1) {
-      try {
-        // Tokenize the query into individual words
-        const tokens = tokenize(query);
+  if (query.length >= 2) {
+    try {
+      // Tokenize the query into individual words
+      const tokens = tokenize(query);
 
-        // Fetch search index files for each token and retrieve document IDs
-        const tokenResults = await Promise.all(
-          tokens.map(async (token) => {
-            const prefix = token.slice(0, 2); // Extract the first three letters as the prefix
-            const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
+      // Fetch search index files for each token and retrieve document IDs
+      const tokenResults = await Promise.all(
+        tokens.map(async (token) => {
+          const prefix = token.slice(0, 2); // First two letters as prefix
+          const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
 
-            // Fetch the JSON file for the prefix
-            const response = await fetch(filePath);
-            if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
-            const searchData = await response.json();
+          const response = await fetch(filePath);
+          if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
+          const searchData = await response.json();
 
-            // Find matching words for the token
-            const matchedWords = Object.keys(searchData).filter((word) =>
-              word.toLowerCase().startsWith(token)
-            );
+          // Find exact matches for the token (or closest match)
+          const exactMatch = searchData[token] || 
+                            Object.entries(searchData)
+                              .find(([word]) => word.includes(token))?.[1];
 
-            // Retrieve document IDs for all matching words
-            return matchedWords.flatMap((word) => searchData[word]);
-          })
-        );
+          return exactMatch || [];
+        })
+      );
 
-        // Find the intersection of document IDs for all tokens
-        const resultIds = tokenResults.reduce((acc, curr) => {
-          if (acc.length === 0) return curr; // Initialize with the first set of IDs
-          return acc.filter((id) => curr.includes(id)); // Keep only IDs present in both sets
-        }, []);
+      // Find the intersection of document IDs for all tokens
+      const resultIds = tokenResults.reduce((acc, curr) => {
+        if (acc.length === 0) return curr;
+        return acc.filter(id => curr.includes(id));
+      }, []);
 
-        if (resultIds.length > 0) {
-          // Display matching IDs
-          resultIds.forEach((id) => {
-            const resultItem = document.createElement('div');
-            resultItem.textContent = `ID: ${id}`;
-            searchResults.appendChild(resultItem);
-          });
-        } else {
-          // No results found
-          searchResults.textContent = 'No results found.';
-        }
-      } catch (error) {
-        console.error('Error fetching search index:', error);
+      // Display results
+      if (resultIds.length > 0) {
+        searchResults.innerHTML = resultIds.map(id => 
+          `<div class="search-result">ID: ${id}</div>`
+        ).join('');
+      } else {
         searchResults.textContent = 'No results found.';
       }
-    } else if (query.length > 0 && query.length < 1) {
-      // Inform the user to type at least 3 characters
-      searchResults.textContent = 'Please type at least 2 characters to search.';
-    } else {
-      // Clear results when the input is empty
-      searchResults.textContent = '';
+    } catch (error) {
+      console.error('Error fetching search index:', error);
+      searchResults.innerHTML = `
+        <div class="search-error">
+          Error loading search results. Please try again.
+        </div>
+      `;
     }
-  };
+  } else if (query.length > 0) {
+    searchResults.textContent = 'Please type at least 2 characters to search.';
+  } else {
+    searchResults.textContent = '';
+  }
+};
 
   // Add debounced event listener
   searchBar.addEventListener('input', debounce((e) => {
