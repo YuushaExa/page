@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, []);
 
       // Display results
-      if (resultIds.length > 0) {
+      if (resultIds.length > 2) {
         searchResults.innerHTML = resultIds.map(id => 
           `<div class="search-result">ID: ${id}</div>`
         ).join('');
