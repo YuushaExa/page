@@ -22,81 +22,65 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Function to fetch and process search results
-  const handleSearch = async (query) => {
-    searchResults.innerHTML = ''; // Clear previous results
+const handleSearch = async (query) => {
+  searchResults.innerHTML = ''; // Clear previous results
 
-    if (query.length >= 2) {
-      try {
-        // Tokenize the query into individual words
-        const tokens = tokenize(query);
+  if (query.length >= 2) {
+    try {
+      // Tokenize the query into individual words
+      const tokens = tokenize(query);
 
-        // Fetch search index files for each token and retrieve document IDs
-        const tokenResults = await Promise.all(
-          tokens.map(async (token) => {
-            const prefix = token.slice(0, 2); // Extract the first three letters as the prefix
-            const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
+      // Fetch search index files for each token and retrieve document IDs
+      const tokenResults = await Promise.all(
+        tokens.map(async (token) => {
+          const prefix = token.slice(0, 2); // Extract the first two letters as the prefix
+          const filePath = `${baseUrl}${hobby}/posts/search-index/${prefix}.json`;
 
-            // Fetch the JSON file for the prefix
-            const response = await fetch(filePath);
-            if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
-            const searchData = await response.json();
+          // Fetch the JSON file for the prefix
+          const response = await fetch(filePath);
+          if (!response.ok) throw new Error(`File not found for prefix: ${prefix}`);
+          const searchData = await response.json();
 
-            // Find matching words for the token
-            const matchedWords = Object.keys(searchData).filter((word) =>
-              word.toLowerCase().startsWith(token)
-            );
+          // Find matching words for the token
+          const matchedWords = Object.keys(searchData).filter((word) =>
+            word.toLowerCase().startsWith(token)
+          );
 
-            // Retrieve document IDs for all matching words
-            return matchedWords.flatMap((word) => searchData[word]);
-          })
-        );
+          // Retrieve document IDs for all matching words
+          // For each matched word, get the "available" array from the object
+          return matchedWords.flatMap((word) => searchData[word].available || []);
+        })
+      );
 
-        // Find the intersection of document IDs for all tokens
-        const resultIds = tokenResults.reduce((acc, curr) => {
-          if (acc.length === 0) return curr; // Initialize with the first set of IDs
-          return acc.filter((id) => curr.includes(id)); // Keep only IDs present in both sets
-        }, []);
+      // Find the intersection of document IDs for all tokens
+      const resultIds = tokenResults.reduce((acc, curr) => {
+        if (acc.length === 0) return curr; // Initialize with the first set of IDs
+        return acc.filter((id) => curr.includes(id)); // Keep only IDs present in both sets
+      }, []);
 
-        if (resultIds.length > 0) {
-          // Display matching IDs
-  if (resultIds.length > 0) {
-  // Display matching IDs
-  resultIds.forEach((item) => {
-    const resultItem = document.createElement('div');
-    
-    // Check if the item is an object with an "available" property
-    if (typeof item === 'object' && item.available) {
-      // Handle the case where it's an object with an array of IDs
-      item.available.forEach(id => {
-        const idItem = document.createElement('div');
-        idItem.textContent = `ID: ${id}`;
-        searchResults.appendChild(idItem);
-      });
-    } 
-    // Check if it's a simple string ID
-    else if (typeof item === 'string') {
-      resultItem.textContent = `ID: ${item}`;
-      searchResults.appendChild(resultItem);
-    }
-  });
-}
-        } else {
-          // No results found
-          searchResults.textContent = 'No results found.';
-        }
-      } catch (error) {
-        console.error('Error fetching search index:', error);
+      if (resultIds.length > 0) {
+        // Display matching IDs
+        resultIds.forEach((id) => {
+          const resultItem = document.createElement('div');
+          resultItem.textContent = `ID: ${id}`;
+          searchResults.appendChild(resultItem);
+        });
+      } else {
+        // No results found
         searchResults.textContent = 'No results found.';
       }
-    } else if (query.length > 0 && query.length < 2) {
-      // Inform the user to type at least 3 characters
-      searchResults.textContent = 'Please type at least 2 characters to search.';
-    } else {
-      // Clear results when the input is empty
-      searchResults.textContent = '';
+    } catch (error) {
+      console.error('Error fetching search index:', error);
+      searchResults.textContent = 'No results found.';
     }
-  };
-
+  } else if (query.length > 0 && query.length < 2) {
+    // Inform the user to type at least 2 characters
+    searchResults.textContent = 'Please type at least 2 characters to search.';
+  } else {
+    // Clear results when the input is empty
+    searchResults.textContent = '';
+  }
+};
   // Add debounced event listener
   searchBar.addEventListener('input', debounce((e) => {
     const query = e.target.value.trim(); // Get the search query
